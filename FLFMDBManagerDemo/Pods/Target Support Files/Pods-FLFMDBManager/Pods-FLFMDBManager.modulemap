@@ -1,0 +1,6 @@
+framework module Pods_FLFMDBManager {
+  umbrella header "Pods-FLFMDBManager-umbrella.h"
+
+  export *
+  module * { export * }
+}
