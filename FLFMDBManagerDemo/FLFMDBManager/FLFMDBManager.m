@@ -102,7 +102,7 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
 
 
 - (BOOL)fl_modifyModel:(id)model byID:(NSString *)FLDBID{
-    return [self fl_searchModel:model byID:FLDBID autoCloseDB:YES];
+    return [self fl_modifyModel:model byID:FLDBID autoCloseDB:YES];
 }
 
 - (BOOL)fl_dropTable:(Class)modelClass{
