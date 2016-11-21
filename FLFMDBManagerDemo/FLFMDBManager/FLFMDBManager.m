@@ -10,9 +10,14 @@
 #import "FMDB.h"
 #import <objc/runtime.h>
 
+#define FL_ISEXITTABLE(modelClass) \
+{NSString *classNameTip = [NSString stringWithFormat:@"%@ 表不存在，请先创建",modelClass]; \
+NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
+}
+
 @interface FLFMDBManager ()
 @property (nonatomic,strong)FMDatabase *dataBase;
-@property (nonatomic,strong)FMDatabaseQueue *queue;
+//@property (nonatomic,strong)FMDatabaseQueue *queue;
 @end
 
 @implementation FLFMDBManager
@@ -29,7 +34,6 @@
     });
     return instance;
 }
-
 
 - (BOOL)fl_createTable:(Class)modelClass{
     return [self fl_createTable:modelClass autoCloseDB:YES];
@@ -54,10 +58,11 @@
     return flag;
 }
 
-- (id)fl_searchModel:(Class)modelClass byID:(NSString *)DBID{
+- (id)fl_searchModel:(Class)modelClass byID:(NSString *)FLDBID{
     if ([self.dataBase open]) {
+        FL_ISEXITTABLE(modelClass);
         // 查询数据
-        FMResultSet *rs = [self.dataBase executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@ WHERE DBID = '%@';",modelClass,DBID]];
+        FMResultSet *rs = [self.dataBase executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@ WHERE FLDBID = '%@';",modelClass,FLDBID]];
         // 创建对象
         id object = [[modelClass class] new];
         // 遍历结果集
@@ -70,20 +75,32 @@
                 NSString * key = [[NSString stringWithUTF8String:ivar_getName(ivar)] stringByReplacingOccurrencesOfString:@"_" withString:@""];
                 
                 id value = [rs objectForColumnName:key];
-                [object setValue:value forKey:key];
+                if ([value isKindOfClass:[NSString class]]) {
+                    NSData *data = [value dataUsingEncoding:NSUTF8StringEncoding];
+                    id result = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+                    if ([result isKindOfClass:[NSDictionary class]] || [result isKindOfClass:[NSMutableDictionary class]] || [result isKindOfClass:[NSArray class]] || [result isKindOfClass:[NSMutableArray class]]) {
+                        [object setValue:result forKey:key];
+                    }
+                    else{
+                        [object setValue:value forKey:key];
+                    }
+                }
+                else{
+                    [object setValue:value forKey:key];
+                }
             }
         }
         [self.dataBase close];
         return object;
     }
     else{
-        NSLog(@"数据库没开启");
         return nil;
     }
 }
 
 - (NSArray *)fl_searchModelArr:(Class)modelClass{
     if ([self.dataBase open]) {
+        FL_ISEXITTABLE(modelClass);
         // 查询数据
         FMResultSet *rs = [self.dataBase executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@",modelClass]];
         NSMutableArray *modelArrM = [NSMutableArray array];
@@ -100,7 +117,19 @@
                 NSString * key = [[NSString stringWithUTF8String:ivar_getName(ivar)] stringByReplacingOccurrencesOfString:@"_" withString:@""];
                 
                 id value = [rs objectForColumnName:key];
-                [object setValue:value forKey:key];
+                if ([value isKindOfClass:[NSString class]]) {
+                    NSData *data = [value dataUsingEncoding:NSUTF8StringEncoding];
+                    id result = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+                    if ([result isKindOfClass:[NSDictionary class]] || [result isKindOfClass:[NSMutableDictionary class]] || [result isKindOfClass:[NSArray class]] || [result isKindOfClass:[NSMutableArray class]]) {
+                        [object setValue:result forKey:key];
+                    }
+                    else{
+                        [object setValue:value forKey:key];
+                    }
+                }
+                else{
+                    [object setValue:value forKey:key];
+                }
             }
             
             // 添加
@@ -110,14 +139,14 @@
         return modelArrM.copy;
     }
     else{
-        NSLog(@"数据库没开启");
         return nil;
     }
 }
 
 
-- (BOOL)fl_modifyModel:(id)model byID:(NSString *)DBID{
+- (BOOL)fl_modifyModel:(id)model byID:(NSString *)FLDBID{
     if ([self.dataBase open]) {
+        FL_ISEXITTABLE([model class]);
         // 修改数据@"UPDATE t_student SET name = 'liwx' WHERE age > 12 AND age < 15;"
         NSMutableString *sql = [NSMutableString stringWithFormat:@"UPDATE %@ SET ",[model class]];
         unsigned int outCount;
@@ -134,64 +163,60 @@
             }
         }
         
-        [sql appendFormat:@" WHERE DBID = '%@';",DBID];
-        NSLog(@"modify sql = %@",sql);
+        [sql appendFormat:@" WHERE FLDBID = '%@';",FLDBID];
         BOOL success = [self.dataBase executeUpdate:sql];
         [self.dataBase close];
         return success;
     }
     else{
-        NSLog(@"数据库没开启");
         return NO;
     }
 }
 
 - (BOOL)fl_dropTable:(Class)modelClass{
     if ([self.dataBase open]) {
+        FL_ISEXITTABLE(modelClass);
         // 删除数据
         NSMutableString *sql = [NSMutableString stringWithFormat:@"DROP TABLE %@;",modelClass];
-        NSLog(@"fl_dropModel sql = %@",sql);
         BOOL success = [self.dataBase executeUpdate:sql];
-        if (success) {
-            NSLog(@"删表成功");
-        }
         [self.dataBase close];
         return success;
     }
     else{
-        NSLog(@"数据库没开启");
         return NO;
     }
 }
 
 - (BOOL)fl_deleteAllModel:(Class)modelClass{
     if ([self.dataBase open]) {
+        FL_ISEXITTABLE(modelClass);
         // 删除数据
         NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@;",modelClass];
-        NSLog(@"fl_deleteAllModel sql = %@",sql);
         BOOL success = [self.dataBase executeUpdate:sql];
         [self.dataBase close];
         return success;
     }
     else{
-        NSLog(@"数据库没开启");
         return NO;
     }
 }
 
-- (BOOL)fl_deleteModel:(Class)modelClass byId:(NSString *)DBID{
+- (BOOL)fl_deleteModel:(Class)modelClass byId:(NSString *)FLDBID{
     if ([self.dataBase open]) {
+        FL_ISEXITTABLE(modelClass);
         // 删除数据
-        NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@ WHERE  DBID = '%@';",modelClass,DBID];
-        NSLog(@"fl_deleteModel sql = %@",sql);
+        NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@ WHERE  FLDBID = '%@';",modelClass,FLDBID];
         BOOL success = [self.dataBase executeUpdate:sql];
         [self.dataBase close];
         return success;
     }
     else{
-        NSLog(@"数据库没开启");
         return NO;
     }
+}
+
+- (BOOL)fl_isExitTable:(Class)modelClass{
+    return [self isExitTable:modelClass autoCloseDB:YES];
 }
 
 
@@ -213,7 +238,6 @@
     }
     [sqlPropertyM appendString:@")"];
     
-    NSLog(@"propertySql = %@",sqlPropertyM);
     return sqlPropertyM;
 }
 
@@ -244,7 +268,9 @@
         NSString * key = [[NSString stringWithUTF8String:ivar_getName(ivar)] stringByReplacingOccurrencesOfString:@"_" withString:@""];
         
         id value = [model valueForKey:key];
-        
+        if ([value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableDictionary class]] || [value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSMutableArray class]]) {
+            value = [NSString stringWithFormat:@"%@",value];
+        }
         if (i == 0) {
             // sql 语句中字符串需要单引号或者双引号括起来
             [sqlValueM appendFormat:@"%@",[value isKindOfClass:[NSString class]] ? [NSString stringWithFormat:@"'%@'",value] : value];
@@ -255,7 +281,6 @@
     }
     [sqlValueM appendString:@");"];
     
-    NSLog(@"valueSql = %@",sqlValueM);
     return sqlValueM;
 }
 
@@ -265,27 +290,38 @@
  *  指定的表是否存在
  */
 - (BOOL)isExitTable:(Class)modelClass autoCloseDB:(BOOL)autoCloseDB{
-    BOOL success = [self.dataBase executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@",modelClass]];
-    // 操作完毕是否需要关闭
-    if (autoCloseDB) {
-        [self.dataBase close];
-    }
-    return success;
-}
-
-- (BOOL)fl_createTable:(Class)modelClass autoCloseDB:(BOOL)autoCloseDB{
-    if ([self.dataBase open]) {
-        NSLog(@"数据库打开成功");
-        // 创表
-        BOOL success = [self.dataBase executeUpdate:[self createTableSQL:modelClass]];
-        // 关闭数据库
+    if ([self.dataBase open]){
+        BOOL success = [self.dataBase executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@",modelClass]];
+        // 操作完毕是否需要关闭
         if (autoCloseDB) {
             [self.dataBase close];
         }
         return success;
     }
     else{
-        NSLog(@"数据库打开失败");
+        return NO;
+    }
+}
+
+- (BOOL)fl_createTable:(Class)modelClass autoCloseDB:(BOOL)autoCloseDB{
+    if ([self.dataBase open]) {
+        // 创表,判断是否已经存在
+        if ([self isExitTable:modelClass autoCloseDB:NO]) {
+            if (autoCloseDB) {
+                [self.dataBase close];
+            }
+            return YES;
+        }
+        else{
+            BOOL success = [self.dataBase executeUpdate:[self createTableSQL:modelClass]];
+            // 关闭数据库
+            if (autoCloseDB) {
+                [self.dataBase close];
+            }
+            return success;
+        }
+    }
+    else{
         return NO;
     }
 }
@@ -299,7 +335,6 @@
             // 第二步处理完不关闭数据库
             BOOL success = [self fl_createTable:[model class] autoCloseDB:NO];
             if (success) {
-                NSLog(@"创建表成功");
                 BOOL insertSuccess = [self.dataBase executeUpdate:[self createInsertSQL:model]];
                 // 最后一步操作完毕，询问是否需要关闭
                 if (autoCloseDB) {
@@ -308,7 +343,6 @@
                 return insertSuccess;
             }
             else {
-                NSLog(@"创建表失败");
                 // 第二步操作失败，询问是否需要关闭
                 if (autoCloseDB) {
                     [self.dataBase close];
@@ -328,7 +362,6 @@
         }
     }
     else{
-        NSLog(@"数据库还没打开");
         return NO;
     }
 }

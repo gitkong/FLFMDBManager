@@ -28,7 +28,7 @@
 /**
  *  @author Clarence
  *
- *  根据类名创建表，执行完毕后自动关闭数据库
+ *  根据类名创建表，如果有则跳过，没有才创建，执行完毕后自动关闭数据库
  */
 - (BOOL)fl_createTable:(Class)modelClass;
 
@@ -51,17 +51,23 @@
 
 
 #pragma mark -- 查询
+/**
+ *  @author Clarence
+ *
+ *  查询指定表是否存在，执行完毕后自动关闭数据库
+ */
+- (BOOL)fl_isExitTable:(Class)modelClass;
 
 /**
  *  @author Clarence
  *
- *  查找指定表中指定DBID的模型，执行完毕后自动关闭数据库
+ *  查找指定表中指定DBID的模型，执行完毕后自动关闭数据库，如果没有对应表，会有断言
  */
-- (id)fl_searchModel:(Class)modelClass byID:(NSString *)DBID;
+- (id)fl_searchModel:(Class)modelClass byID:(NSString *)FLDBID;
 /**
  *  @author Clarence
  *
- *  查找指定表中模型数组（所有的），执行完毕后自动关闭数据库
+ *  查找指定表中模型数组（所有的），执行完毕后自动关闭数据库，如果没有对应表，会有断言
  */
 - (NSArray *)fl_searchModelArr:(Class)modelClass;
 
@@ -71,31 +77,31 @@
 /**
  *  @author Clarence
  *
- *  修改指定DBID的模型，执行完毕后自动关闭数据库
+ *  修改指定DBID的模型，执行完毕后自动关闭数据库，如果没有对应表，会有断言
  */
 
-- (BOOL)fl_modifyModel:(id)model byID:(NSString *)DBID;
+- (BOOL)fl_modifyModel:(id)model byID:(NSString *)FLDBID;
 
 
 #pragma mark -- 删除
 /**
  *  @author Clarence
  *
- *  删除指定表，执行完毕后自动关闭数据库
+ *  删除指定表，执行完毕后自动关闭数据库，如果没有对应表，会有断言
  */
 - (BOOL)fl_dropTable:(Class)modelClass;
 /**
  *  @author Clarence
  *
- *  删除指定表格的所有数据，执行完毕后自动关闭数据库
+ *  删除指定表格的所有数据，执行完毕后自动关闭数据库，如果没有对应表，会有断言
  */
 - (BOOL)fl_deleteAllModel:(Class)modelClass;
 
 /**
  *  @author Clarence
  *
- *  删除指定表中指定DBID的模型，执行完毕后自动关闭数据库
+ *  删除指定表中指定DBID的模型，执行完毕后自动关闭数据库，如果没有对应表，会有断言
  */
-- (BOOL)fl_deleteModel:(Class)modelClass byId:(NSString *)DBID;
+- (BOOL)fl_deleteModel:(Class)modelClass byId:(NSString *)FLDBID;
 
 @end

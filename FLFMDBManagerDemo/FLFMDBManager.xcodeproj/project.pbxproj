@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		11253F781DE2915D002433CC /* FLStudentTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 11253F761DE2915D002433CC /* FLStudentTableViewCell.m */; };
+		11253F791DE2915D002433CC /* FLStudentTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 11253F771DE2915D002433CC /* FLStudentTableViewCell.xib */; };
 		11FF1BE81DDD9FC200EBCAB8 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 11FF1BE71DDD9FC200EBCAB8 /* main.m */; };
 		11FF1BEB1DDD9FC200EBCAB8 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 11FF1BEA1DDD9FC200EBCAB8 /* AppDelegate.m */; };
 		11FF1BEE1DDD9FC200EBCAB8 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 11FF1BED1DDD9FC200EBCAB8 /* ViewController.m */; };
@@ -19,6 +21,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		11253F751DE2915D002433CC /* FLStudentTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLStudentTableViewCell.h; sourceTree = "<group>"; };
+		11253F761DE2915D002433CC /* FLStudentTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FLStudentTableViewCell.m; sourceTree = "<group>"; };
+		11253F771DE2915D002433CC /* FLStudentTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = FLStudentTableViewCell.xib; sourceTree = "<group>"; };
 		11FF1BE31DDD9FC200EBCAB8 /* FLFMDBManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FLFMDBManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		11FF1BE71DDD9FC200EBCAB8 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		11FF1BE91DDD9FC200EBCAB8 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -50,6 +55,43 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		11253F7A1DE2A7F0002433CC /* FLFMDBManager */ = {
+			isa = PBXGroup;
+			children = (
+				11FF1BFD1DDDA14500EBCAB8 /* FLFMDBManager.h */,
+				11FF1BFE1DDDA14500EBCAB8 /* FLFMDBManager.m */,
+			);
+			name = FLFMDBManager;
+			sourceTree = "<group>";
+		};
+		11253F7B1DE2A9AE002433CC /* Controller */ = {
+			isa = PBXGroup;
+			children = (
+				11FF1BEC1DDD9FC200EBCAB8 /* ViewController.h */,
+				11FF1BED1DDD9FC200EBCAB8 /* ViewController.m */,
+			);
+			name = Controller;
+			sourceTree = "<group>";
+		};
+		11253F7C1DE2A9BB002433CC /* View */ = {
+			isa = PBXGroup;
+			children = (
+				11253F751DE2915D002433CC /* FLStudentTableViewCell.h */,
+				11253F761DE2915D002433CC /* FLStudentTableViewCell.m */,
+				11253F771DE2915D002433CC /* FLStudentTableViewCell.xib */,
+			);
+			name = View;
+			sourceTree = "<group>";
+		};
+		11253F7D1DE2A9C5002433CC /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				11FF1C001DDDADB600EBCAB8 /* FLStudentModel.h */,
+				11FF1C011DDDADB600EBCAB8 /* FLStudentModel.m */,
+			);
+			name = Model;
+			sourceTree = "<group>";
+		};
 		11FF1BDA1DDD9FC200EBCAB8 = {
 			isa = PBXGroup;
 			children = (
@@ -71,18 +113,10 @@
 		11FF1BE51DDD9FC200EBCAB8 /* FLFMDBManager */ = {
 			isa = PBXGroup;
 			children = (
-				11FF1BE91DDD9FC200EBCAB8 /* AppDelegate.h */,
-				11FF1BEA1DDD9FC200EBCAB8 /* AppDelegate.m */,
-				11FF1BEC1DDD9FC200EBCAB8 /* ViewController.h */,
-				11FF1BED1DDD9FC200EBCAB8 /* ViewController.m */,
-				11FF1C001DDDADB600EBCAB8 /* FLStudentModel.h */,
-				11FF1C011DDDADB600EBCAB8 /* FLStudentModel.m */,
-				11FF1BFD1DDDA14500EBCAB8 /* FLFMDBManager.h */,
-				11FF1BFE1DDDA14500EBCAB8 /* FLFMDBManager.m */,
-				11FF1BEF1DDD9FC200EBCAB8 /* Main.storyboard */,
-				11FF1BF21DDD9FC200EBCAB8 /* Assets.xcassets */,
-				11FF1BF41DDD9FC200EBCAB8 /* LaunchScreen.storyboard */,
-				11FF1BF71DDD9FC200EBCAB8 /* Info.plist */,
+				11253F7A1DE2A7F0002433CC /* FLFMDBManager */,
+				11253F7B1DE2A9AE002433CC /* Controller */,
+				11253F7C1DE2A9BB002433CC /* View */,
+				11253F7D1DE2A9C5002433CC /* Model */,
 				11FF1BE61DDD9FC200EBCAB8 /* Supporting Files */,
 			);
 			path = FLFMDBManager;
@@ -91,6 +125,12 @@
 		11FF1BE61DDD9FC200EBCAB8 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				11FF1BE91DDD9FC200EBCAB8 /* AppDelegate.h */,
+				11FF1BEA1DDD9FC200EBCAB8 /* AppDelegate.m */,
+				11FF1BEF1DDD9FC200EBCAB8 /* Main.storyboard */,
+				11FF1BF21DDD9FC200EBCAB8 /* Assets.xcassets */,
+				11FF1BF41DDD9FC200EBCAB8 /* LaunchScreen.storyboard */,
+				11FF1BF71DDD9FC200EBCAB8 /* Info.plist */,
 				11FF1BE71DDD9FC200EBCAB8 /* main.m */,
 			);
 			name = "Supporting Files";
@@ -178,6 +218,7 @@
 				11FF1BF61DDD9FC200EBCAB8 /* LaunchScreen.storyboard in Resources */,
 				11FF1BF31DDD9FC200EBCAB8 /* Assets.xcassets in Resources */,
 				11FF1BF11DDD9FC200EBCAB8 /* Main.storyboard in Resources */,
+				11253F791DE2915D002433CC /* FLStudentTableViewCell.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -241,6 +282,7 @@
 				11FF1BEB1DDD9FC200EBCAB8 /* AppDelegate.m in Sources */,
 				11FF1BE81DDD9FC200EBCAB8 /* main.m in Sources */,
 				11FF1C021DDDADB600EBCAB8 /* FLStudentModel.m in Sources */,
+				11253F781DE2915D002433CC /* FLStudentTableViewCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
