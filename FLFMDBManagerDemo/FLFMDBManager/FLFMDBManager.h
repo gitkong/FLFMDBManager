@@ -37,17 +37,14 @@
 /**
  *  @author Clarence
  *
- *  插入单个模型，如果没创建表就自动先创建，表名为模型类名
+ *  @param model 插入单个模型或者模型数组,如果此时传入的模型对应的FLDBID在表中已经存在，则替换更新旧的
+ *  如果没创建表就自动先创建，表名为模型类名
  *  此时执行完毕后自动关闭数据库
+ *
+ @return YES or NO
  */
 - (BOOL)fl_insertModel:(id)model;
-/**
- *  @author Clarence
- *
- *  插入模型数组，如果没有创建表就自动创建，表名为模型类名
- *  内部已优化处理，数组插入完毕后才关闭数据库
- */
-- (BOOL)fl_insertModelArr:(NSArray *)modelArr;
+
 
 
 #pragma mark -- 查询

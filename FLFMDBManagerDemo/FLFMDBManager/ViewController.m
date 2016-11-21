@@ -22,9 +22,9 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-    if ([FLFMDBMANAGER fl_isExitTable:[FLStudentModel class]]) {
-        [FLFMDBMANAGER fl_dropTable:[FLStudentModel class]];
-    }
+//    if ([FLFMDBMANAGER fl_isExitTable:[FLStudentModel class]]) {
+//        [FLFMDBMANAGER fl_dropTable:[FLStudentModel class]];
+//    }
     
     NSMutableArray *arrM = [NSMutableArray array];
     for (NSInteger index = 0; index < 10; index ++) {
@@ -39,7 +39,7 @@
         _index = index + 1;
     }
     
-    BOOL success = [FLFMDBMANAGER fl_insertModelArr:arrM];
+    BOOL success = [FLFMDBMANAGER fl_insertModel:arrM];
     if (success) {
         NSLog(@"插入成功");
     }
@@ -101,7 +101,7 @@
     FLStudentModel *model = [[FLStudentModel alloc] init];
     model.name = @"gitKong";
     model.age = 24;
-    model.FLDBID = [NSString stringWithFormat:@"gitKong_%zd",_index++];
+    model.FLDBID = [NSString stringWithFormat:@"gitKong_%zd",_index ++];
     model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24,@"sex" : @"male"};
     model.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"99",@"97", nil];
     
