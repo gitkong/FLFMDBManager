@@ -154,7 +154,6 @@
 [FLFMDBMANAGER fl_searchModel:[FLStudentModel class] byID:textField.text]
 ```
 
-
 ![FMDB封装效果.gif](http://upload-images.jianshu.io/upload_images/1085031-071af8fead4f57d3.gif?imageMogr2/auto-orient/strip)
 
 #五、使用注意点以及不足之处
