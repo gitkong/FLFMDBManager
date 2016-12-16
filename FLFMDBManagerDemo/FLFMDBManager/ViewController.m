@@ -30,7 +30,7 @@
     for (NSInteger index = 0; index < 10; index ++) {
         
         FLStudentModel *model = [[FLStudentModel alloc] init];
-        model.name = @"clarence";
+        model.name_gitKong = @"clarence";
         model.age = 24;
         model.FLDBID = [NSString stringWithFormat:@"clarence_%zd",index];
         model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24};
@@ -99,7 +99,7 @@
 - (IBAction)insertData:(id)sender {
     
     FLStudentModel *model = [[FLStudentModel alloc] init];
-    model.name = @"gitKong";
+    model.name_gitKong = @"gitKong";
     model.age = 24;
     model.FLDBID = [NSString stringWithFormat:@"gitKong_%zd",_index ++];
     model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24,@"sex" : @"male"};
@@ -145,7 +145,7 @@
         
         UIAlertAction *action = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
             NSLog(@"text = %@",textField.text);
-            model.name = textField.text;
+            model.name_gitKong = textField.text;
             if ([[FLFMDBManager shareManager] fl_modifyModel:model byID:model.FLDBID]) {
                 [weakSelf.tableView reloadData];
             }

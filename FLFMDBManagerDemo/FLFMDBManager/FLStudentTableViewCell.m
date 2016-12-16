@@ -26,7 +26,7 @@
 
 - (void)setModel:(FLStudentModel *)model{
     _model = model;
-    self.nameLabel.text = [NSString stringWithFormat:@"名字：%@",model.name];
+    self.nameLabel.text = [NSString stringWithFormat:@"名字：%@",model.name_gitKong];
     self.ageLabel.text = [NSString stringWithFormat:@"年龄：%zd",model.age];
     self.DBIDLabel.text = [NSString stringWithFormat:@"FLDBID：%@",model.FLDBID];
     self.msgInfoLabel.text = [NSString stringWithFormat:@"msgInfo：%@",model.msgInfo];

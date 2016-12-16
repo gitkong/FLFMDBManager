@@ -18,7 +18,7 @@
 @property (nonatomic,copy)NSString *FLDBID;
 
 
-@property (nonatomic,copy)NSString *name;
+@property (nonatomic,copy)NSString *name_gitKong;
 
 @property (nonatomic,assign)NSInteger age;
 

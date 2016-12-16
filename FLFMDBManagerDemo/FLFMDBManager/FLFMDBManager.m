@@ -71,7 +71,10 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
             Ivar * ivars = class_copyIvarList(modelClass, &outCount);
             for (int i = 0; i < outCount; i ++) {
                 Ivar ivar = ivars[i];
-                NSString * key = [[NSString stringWithUTF8String:ivar_getName(ivar)] stringByReplacingOccurrencesOfString:@"_" withString:@""];
+                NSString * key = [NSString stringWithUTF8String:ivar_getName(ivar)] ;
+                if([[key substringToIndex:1] isEqualToString:@"_"]){
+                    key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
+                }
                 
                 id value = [rs objectForColumnName:key];
                 if ([value isKindOfClass:[NSString class]]) {
@@ -165,7 +168,10 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
     Ivar * ivars = class_copyIvarList(modelClass, &outCount);
     for (int i = 0; i < outCount; i ++) {
         Ivar ivar = ivars[i];
-        NSString * key = [[NSString stringWithUTF8String:ivar_getName(ivar)] stringByReplacingOccurrencesOfString:@"_" withString:@""];
+        NSString * key = [NSString stringWithUTF8String:ivar_getName(ivar)] ;
+        if([[key substringToIndex:1] isEqualToString:@"_"]){
+            key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
+        }
         [sqlPropertyM appendFormat:@", %@",key];
     }
     [sqlPropertyM appendString:@")"];
@@ -184,7 +190,10 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
     Ivar * ivars = class_copyIvarList([model class], &outCount);
     for (int i = 0; i < outCount; i ++) {
         Ivar ivar = ivars[i];
-        NSString * key = [[NSString stringWithUTF8String:ivar_getName(ivar)] stringByReplacingOccurrencesOfString:@"_" withString:@""];
+        NSString * key = [NSString stringWithUTF8String:ivar_getName(ivar)] ;
+        if([[key substringToIndex:1] isEqualToString:@"_"]){
+            key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
+        }
         
         if (i == 0) {
             [sqlValueM appendString:key];
@@ -197,7 +206,10 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
     
     for (int i = 0; i < outCount; i ++) {
         Ivar ivar = ivars[i];
-        NSString * key = [[NSString stringWithUTF8String:ivar_getName(ivar)] stringByReplacingOccurrencesOfString:@"_" withString:@""];
+        NSString * key = [NSString stringWithUTF8String:ivar_getName(ivar)] ;
+        if([[key substringToIndex:1] isEqualToString:@"_"]){
+            key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
+        }
         
         id value = [model valueForKey:key];
         if ([value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableDictionary class]] || [value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSMutableArray class]]) {
@@ -352,7 +364,10 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
             Ivar * ivars = class_copyIvarList(modelClass, &outCount);
             for (int i = 0; i < outCount; i ++) {
                 Ivar ivar = ivars[i];
-                NSString * key = [[NSString stringWithUTF8String:ivar_getName(ivar)] stringByReplacingOccurrencesOfString:@"_" withString:@""];
+                NSString * key = [NSString stringWithUTF8String:ivar_getName(ivar)] ;
+                if([[key substringToIndex:1] isEqualToString:@"_"]){
+                    key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
+                }
                 
                 id value = [rs objectForColumnName:key];
                 if ([value isKindOfClass:[NSString class]]) {
@@ -390,7 +405,10 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
         Ivar * ivars = class_copyIvarList([model class], &outCount);
         for (int i = 0; i < outCount; i ++) {
             Ivar ivar = ivars[i];
-            NSString * key = [[NSString stringWithUTF8String:ivar_getName(ivar)] stringByReplacingOccurrencesOfString:@"_" withString:@""];
+            NSString * key = [NSString stringWithUTF8String:ivar_getName(ivar)] ;
+            if([[key substringToIndex:1] isEqualToString:@"_"]){
+                key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
+            }
             id value = [model valueForKey:key];
             if (i == 0) {
                 [sql appendFormat:@"%@ = %@",key,([value isKindOfClass:[NSString class]] || [value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableDictionary class]] || [value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSMutableArray class]]) ? [NSString stringWithFormat:@"'%@'",value] : value];
