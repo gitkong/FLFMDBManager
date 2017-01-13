@@ -402,6 +402,7 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
         // 修改数据@"UPDATE t_student SET name = 'liwx' WHERE age > 12 AND age < 15;"
         NSMutableString *sql = [NSMutableString stringWithFormat:@"UPDATE %@ SET ",[model class]];
         unsigned int outCount;
+        class_copyIvarList([model superclass],&outCount);
         Ivar * ivars = class_copyIvarList([model class], &outCount);
         for (int i = 0; i < outCount; i ++) {
             Ivar ivar = ivars[i];

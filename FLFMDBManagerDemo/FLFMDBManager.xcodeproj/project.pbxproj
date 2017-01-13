@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		11253F781DE2915D002433CC /* FLStudentTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 11253F761DE2915D002433CC /* FLStudentTableViewCell.m */; };
 		11253F791DE2915D002433CC /* FLStudentTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 11253F771DE2915D002433CC /* FLStudentTableViewCell.xib */; };
+		1144E6071E289C3900A9A9FB /* FLFMDBQueueManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1144E6061E289C3900A9A9FB /* FLFMDBQueueManager.m */; };
 		11FF1BE81DDD9FC200EBCAB8 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 11FF1BE71DDD9FC200EBCAB8 /* main.m */; };
 		11FF1BEB1DDD9FC200EBCAB8 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 11FF1BEA1DDD9FC200EBCAB8 /* AppDelegate.m */; };
 		11FF1BEE1DDD9FC200EBCAB8 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 11FF1BED1DDD9FC200EBCAB8 /* ViewController.m */; };
@@ -24,6 +25,8 @@
 		11253F751DE2915D002433CC /* FLStudentTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLStudentTableViewCell.h; sourceTree = "<group>"; };
 		11253F761DE2915D002433CC /* FLStudentTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FLStudentTableViewCell.m; sourceTree = "<group>"; };
 		11253F771DE2915D002433CC /* FLStudentTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = FLStudentTableViewCell.xib; sourceTree = "<group>"; };
+		1144E6051E289C3900A9A9FB /* FLFMDBQueueManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLFMDBQueueManager.h; sourceTree = "<group>"; };
+		1144E6061E289C3900A9A9FB /* FLFMDBQueueManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FLFMDBQueueManager.m; sourceTree = "<group>"; };
 		11FF1BE31DDD9FC200EBCAB8 /* FLFMDBManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FLFMDBManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		11FF1BE71DDD9FC200EBCAB8 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		11FF1BE91DDD9FC200EBCAB8 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -60,6 +63,8 @@
 			children = (
 				11FF1BFD1DDDA14500EBCAB8 /* FLFMDBManager.h */,
 				11FF1BFE1DDDA14500EBCAB8 /* FLFMDBManager.m */,
+				1144E6051E289C3900A9A9FB /* FLFMDBQueueManager.h */,
+				1144E6061E289C3900A9A9FB /* FLFMDBQueueManager.m */,
 			);
 			name = FLFMDBManager;
 			sourceTree = "<group>";
@@ -279,6 +284,7 @@
 			files = (
 				11FF1BFF1DDDA14500EBCAB8 /* FLFMDBManager.m in Sources */,
 				11FF1BEE1DDD9FC200EBCAB8 /* ViewController.m in Sources */,
+				1144E6071E289C3900A9A9FB /* FLFMDBQueueManager.m in Sources */,
 				11FF1BEB1DDD9FC200EBCAB8 /* AppDelegate.m in Sources */,
 				11FF1BE81DDD9FC200EBCAB8 /* main.m in Sources */,
 				11FF1C021DDDADB600EBCAB8 /* FLStudentModel.m in Sources */,

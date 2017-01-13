@@ -26,6 +26,8 @@
 
 @property (nonatomic,strong)NSMutableArray *scroceArrM;
 
+//@property (nonatomic,copy)NSString *id;
+
 // 嵌套的模型一般创建多一张表，一张表不好处理
 //@property (nonatomic,strong)NSArray *otherModelArr;
 
