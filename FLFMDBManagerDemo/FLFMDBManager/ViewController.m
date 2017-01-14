@@ -20,16 +20,9 @@
     NSInteger _index;
 }
 
-- (void)viewDidLoad {
-    [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
-    
-//    if ([FLFMDBMANAGER fl_isExitTable:[FLStudentModel class]]) {
-//        [FLFMDBMANAGER fl_dropTable:[FLStudentModel class]];
-//    }
-    
+- (void)writeDbOne{
     NSMutableArray *arrM = [NSMutableArray array];
-    for (NSInteger index = 0; index < 10; index ++) {
+    for (NSInteger index = 0; index < 500; index ++) {
         
         FLStudentModel *model = [[FLStudentModel alloc] init];
         model.name_gitKong = @"clarence";
@@ -37,25 +30,98 @@
         model.FLDBID = [NSString stringWithFormat:@"clarence_%zd",index];
         model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24};
         model.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"90",@"80", nil];
-//        model.id = [NSString stringWithFormat:@"%zd",index];
         [arrM addObject:model];
         _index = index + 1;
+        
+        /**
+         *  @author gitKong
+         *
+         *  dataBase
+         */
+        
+//        BOOL success = [FLFMDBMANAGER fl_insertModel:model];
+//        if (success) {
+//            NSLog(@"插入成功");
+//            
+//        }
+//        else {
+//            NSLog(@"插入失败");
+//        }
+        
+        
+        /**
+         *  @author gitKong
+         *
+         *  dataBaseQueue
+         */
+        [FLFMDBQUEUEMANAGER fl_insertModel:model complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+            if (flag) {
+                NSLog(@"插入成功");
+            }
+            else {
+                NSLog(@"插入失败");
+            }
+        }];
     }
-    [FLFMDBQUEUEMANAGER fl_insertModel:arrM complete:^(FMDatabase *db, BOOL flag) {
-        if (flag) {
-            NSLog(@"插入成功");
-        }
-        else {
-            NSLog(@"插入失败");
-        }
+}
+
+- (void)writeDbTwo{
+    NSMutableArray *arrM = [NSMutableArray array];
+    for (NSInteger index = 500; index < 1000; index ++) {
+        
+        FLStudentModel *model = [[FLStudentModel alloc] init];
+        model.name_gitKong = @"clarence";
+        model.age = 24;
+        model.FLDBID = [NSString stringWithFormat:@"clarence_%zd",index];
+        model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24};
+        model.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"90",@"80", nil];
+        [arrM addObject:model];
+        _index = index + 1;
+        
+//        BOOL success = [FLFMDBMANAGER fl_insertModel:model];
+//        if (success) {
+//            NSLog(@"插入成功");
+//            
+//        }
+//        else {
+//            NSLog(@"插入失败");
+//        }
+        
+        [FLFMDBQUEUEMANAGER fl_insertModel:model complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+            if (flag) {
+                NSLog(@"插入成功");
+            }
+            else {
+                NSLog(@"插入失败");
+            }
+        }];
+    }
+}
+
+- (void)readDb{
+    
+//    NSArray *modelArr = [FLFMDBMANAGER fl_searchModelArr:[FLStudentModel class]];
+    
+    [FLFMDBQUEUEMANAGER fl_searchModelArr:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, NSArray *modelArr) {
+        
     }];
-//    BOOL success = [FLFMDBMANAGER fl_insertModel:arrM];
-//    if (success) {
-//        NSLog(@"插入成功");
-//    }
-//    else {
-//        NSLog(@"插入失败");
-//    }
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view, typically from a nib.
+    if ([FLFMDBMANAGER fl_isExitTable:[FLStudentModel class]]) {
+        [FLFMDBMANAGER fl_dropTable:[FLStudentModel class]];
+    }
+    
+    
+    // 多线程测试
+    [NSThread detachNewThreadSelector:@selector(writeDbOne) toTarget:self withObject:nil];
+    
+    [NSThread detachNewThreadSelector:@selector(readDb) toTarget:self withObject:nil];
+    
+    [NSThread detachNewThreadSelector:@selector(writeDbTwo) toTarget:self withObject:nil];
+    
     
     [self.tableView registerNib:[UINib nibWithNibName:@"FLStudentTableViewCell" bundle:nil] forCellReuseIdentifier:@"cell"];
     self.tableView.estimatedRowHeight = 100;
@@ -68,12 +134,18 @@
 //    [self.tableView reloadData];
     
     __weak typeof(self) weakSelf = self;
-    [FLFMDBQUEUEMANAGER fl_searchModelArr:[FLStudentModel class] complete:^(FMDatabase *db, NSArray *modelArr) {
-        __weak typeof(self) strongSelf = weakSelf;
-        [strongSelf.modelArrM removeAllObjects];
-        [strongSelf.modelArrM addObjectsFromArray:modelArr];
-        [strongSelf.tableView reloadData];
-    }];
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        NSLog(@"thread = %@",[NSThread currentThread]);
+        [FLFMDBQUEUEMANAGER fl_searchModelArr:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, NSArray *modelArr) {
+            __weak typeof(self) strongSelf = weakSelf;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [strongSelf.modelArrM removeAllObjects];
+                [strongSelf.modelArrM addObjectsFromArray:modelArr];
+                [strongSelf.tableView reloadData];
+            });
+        }];
+    });
+    
 }
 
 - (IBAction)deleteTable:(id)sender {
@@ -89,17 +161,27 @@
 //    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:str message:nil delegate:nil cancelButtonTitle:@"OK" otherButtonTitles: nil];
 //    [alertView show];
     
-    [FLFMDBQUEUEMANAGER fl_dropTable:[FLStudentModel class] complete:^(FMDatabase *db, BOOL flag) {
+    __weak typeof(self) weakSelf = self;
+    [FLFMDBQUEUEMANAGER fl_dropTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
         NSString *str = @"";
         if (flag) {
+            [strongSelf.modelArrM removeAllObjects];
+        
+            [strongSelf.tableView reloadData];
             str = @"删表成功";
+            
         }
         else{
             str = @"删表失败";
         }
-        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:str message:nil delegate:nil cancelButtonTitle:@"OK" otherButtonTitles: nil];
-        [alertView show];
+        [weakSelf showTip:str];
     }];
+}
+
+- (void)showTip:(NSString *)tip{
+    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:tip message:nil delegate:nil cancelButtonTitle:@"OK" otherButtonTitles: nil];
+    [alertView show];
 }
 
 - (IBAction)searchData:(id)sender {
@@ -121,7 +203,7 @@
 //                NSLog(@"找不到这个模型");
 //            }
             
-            [FLFMDBQUEUEMANAGER fl_searchModel:[FLStudentModel class] byID:textField.text complete:^(FMDatabase *db, BOOL flag, id model) {
+            [FLFMDBQUEUEMANAGER fl_searchModel:[FLStudentModel class] byID:textField.text complete:^(FLFMDBQueueManager *manager,id model) {
                 __strong typeof(weakSelf) strongSelf = weakSelf;
                 FLStudentModel *studentModel = (FLStudentModel *)model;
                 
@@ -132,6 +214,7 @@
                 }
                 else{
                     NSLog(@"找不到这个模型");
+                    [strongSelf showTip:@"找不到这个模型"];
                 }
             }];
         }];
@@ -160,14 +243,17 @@
 //    }
     
     __weak typeof(self) weakSelf = self;
-    [FLFMDBQUEUEMANAGER fl_insertModel:model complete:^(FMDatabase *db, BOOL flag) {
+    [FLFMDBQUEUEMANAGER fl_insertModel:model complete:^(FLFMDBQueueManager *manager, BOOL flag) {
         __weak typeof(self) strongSelf = weakSelf;
         if (flag) {
             [strongSelf.modelArrM addObject:model];
             [strongSelf.tableView reloadData];
+            NSLog(@"插入数据成功");
+            [strongSelf showTip:@"插入数据成功"];
         }
         else{
             NSLog(@"插入数据失败");
+            [strongSelf showTip:@"插入数据失败"];
         }
     }];
 }
@@ -210,12 +296,14 @@
 //                NSLog(@"修改名字失败");
 //            }
             
-            [FLFMDBQUEUEMANAGER fl_modifyModel:model byID:model.FLDBID complete:^(FMDatabase *db, BOOL flag) {
+            [FLFMDBQUEUEMANAGER fl_modifyModel:model byID:model.FLDBID complete:^(FLFMDBQueueManager *manager, BOOL flag) {
                 __weak typeof(self) strongSelf = weakSelf;
                 if (flag) {
+                    [strongSelf showTip:@"修改名字成功"];
                     [strongSelf.tableView reloadData];
                 }
                 else{
+                    [strongSelf showTip:@"修改名字失败"];
                     NSLog(@"修改名字失败");
                 }
             }];
@@ -243,14 +331,18 @@
 //            NSLog(@"删除数据失败");
 //        }
         
-        [FLFMDBQUEUEMANAGER fl_deleteModel:[FLStudentModel class] byId:model.FLDBID complete:^(FMDatabase *db, BOOL flag) {
+        [FLFMDBQUEUEMANAGER fl_deleteModel:[FLStudentModel class] byId:model.FLDBID complete:^(FLFMDBQueueManager *manager, BOOL flag) {
             __weak typeof(self) strongSelf = weakSelf;
             if (flag) {
+                
                 [strongSelf.modelArrM removeObject:model];
                 [strongSelf.tableView reloadData];
+                NSLog(@"删除数据成功");
+                [strongSelf showTip:@"删除数据成功"];
             }
             else{
                 NSLog(@"删除数据失败");
+                [strongSelf showTip:@"删除数据失败"];
             }
         }];
     }];
