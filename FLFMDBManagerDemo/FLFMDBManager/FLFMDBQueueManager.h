@@ -75,7 +75,7 @@
 /**
  *  @author gitKong
  *
- *  修改指定DBID的模型，执行完毕后自动关闭数据库，如果没有对应表，会有断言
+ *  修改指定DBID的模型，执行完毕后自动关闭数据库
  */
 
 - (void)fl_modifyModel:(id)model byID:(NSString *)FLDBID complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
@@ -85,21 +85,21 @@
 /**
  *  @author gitKong
  *
- *  删除指定表，执行完毕后自动关闭数据库，如果没有对应表，会有断言
+ *  删除指定表，执行完毕后自动关闭数据库
  */
 - (void)fl_dropTable:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 
 /**
  *  @author gitKong
  *
- *  删除指定表格的所有数据，执行完毕后自动关闭数据库，如果没有对应表，会有断言
+ *  删除指定表格的所有数据，执行完毕后自动关闭数据库
  */
 - (void)fl_deleteAllModel:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 
 /**
  *  @author gitKong
  *
- *  删除指定表中指定DBID的模型，执行完毕后自动关闭数据库，如果没有对应表，会有断言
+ *  删除指定表中指定DBID的模型，执行完毕后自动关闭数据库
  */
 - (void)fl_deleteModel:(Class)modelClass byId:(NSString *)FLDBID complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 

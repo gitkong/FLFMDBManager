@@ -18,6 +18,7 @@
 		11FF1BF61DDD9FC200EBCAB8 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 11FF1BF41DDD9FC200EBCAB8 /* LaunchScreen.storyboard */; };
 		11FF1BFF1DDDA14500EBCAB8 /* FLFMDBManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 11FF1BFE1DDDA14500EBCAB8 /* FLFMDBManager.m */; };
 		11FF1C021DDDADB600EBCAB8 /* FLStudentModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 11FF1C011DDDADB600EBCAB8 /* FLStudentModel.m */; };
+		3F4DC14B1E2B79D9008A8F11 /* TestViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F4DC14A1E2B79D9008A8F11 /* TestViewController.m */; };
 		80F1889A5643B949BB383F7D /* Pods_FLFMDBManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6454EAB446CC8A3A88FF595 /* Pods_FLFMDBManager.framework */; };
 /* End PBXBuildFile section */
 
@@ -41,6 +42,8 @@
 		11FF1BFE1DDDA14500EBCAB8 /* FLFMDBManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FLFMDBManager.m; sourceTree = "<group>"; };
 		11FF1C001DDDADB600EBCAB8 /* FLStudentModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLStudentModel.h; sourceTree = "<group>"; };
 		11FF1C011DDDADB600EBCAB8 /* FLStudentModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FLStudentModel.m; sourceTree = "<group>"; };
+		3F4DC1491E2B79D9008A8F11 /* TestViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestViewController.h; sourceTree = "<group>"; };
+		3F4DC14A1E2B79D9008A8F11 /* TestViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestViewController.m; sourceTree = "<group>"; };
 		A6454EAB446CC8A3A88FF595 /* Pods_FLFMDBManager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FLFMDBManager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C08E1B030E02B119378D206C /* Pods-FLFMDBManager.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FLFMDBManager.release.xcconfig"; path = "Pods/Target Support Files/Pods-FLFMDBManager/Pods-FLFMDBManager.release.xcconfig"; sourceTree = "<group>"; };
 		FF51FBFCD3410C1EF9F9557F /* Pods-FLFMDBManager.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FLFMDBManager.debug.xcconfig"; path = "Pods/Target Support Files/Pods-FLFMDBManager/Pods-FLFMDBManager.debug.xcconfig"; sourceTree = "<group>"; };
@@ -74,6 +77,8 @@
 			children = (
 				11FF1BEC1DDD9FC200EBCAB8 /* ViewController.h */,
 				11FF1BED1DDD9FC200EBCAB8 /* ViewController.m */,
+				3F4DC1491E2B79D9008A8F11 /* TestViewController.h */,
+				3F4DC14A1E2B79D9008A8F11 /* TestViewController.m */,
 			);
 			name = Controller;
 			sourceTree = "<group>";
@@ -288,6 +293,7 @@
 				11FF1BEB1DDD9FC200EBCAB8 /* AppDelegate.m in Sources */,
 				11FF1BE81DDD9FC200EBCAB8 /* main.m in Sources */,
 				11FF1C021DDDADB600EBCAB8 /* FLStudentModel.m in Sources */,
+				3F4DC14B1E2B79D9008A8F11 /* TestViewController.m in Sources */,
 				11253F781DE2915D002433CC /* FLStudentTableViewCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

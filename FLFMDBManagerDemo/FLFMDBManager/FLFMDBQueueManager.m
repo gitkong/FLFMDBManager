@@ -14,10 +14,10 @@
 #import <objc/runtime.h>
 #import "FMDB.h"
 
-#define FL_ISEXITTABLE(db,modelClass) \
-{NSString *classNameTip = [NSString stringWithFormat:@"%@ 表不存在，请先创建",modelClass]; \
-NSAssert([self fl_isExit:db table:modelClass autoCloseDB:NO], classNameTip);\
-}
+//#define FL_ISEXITTABLE(db,modelClass) \
+//{NSString *classNameTip = [NSString stringWithFormat:@"%@ 表不存在，请先创建",modelClass]; \
+//NSAssert([self fl_isExit:db table:modelClass autoCloseDB:NO], classNameTip);\
+//}
 
 @interface FLFMDBQueueManager ()
 
@@ -572,6 +572,10 @@ NSAssert([self fl_isExit:db table:modelClass autoCloseDB:NO], classNameTip);\
 - (id)fl_search:(FMDatabase *)db model:(Class)modelClass byID:(NSString *)FLDBID autoCloseDB:(BOOL)autoCloseDB{
     
     if ([db open]) {
+        BOOL success = [self fl_isExit:db table:modelClass autoCloseDB:NO];
+        if (!success) {
+            return nil;
+        }
         // 查询数据
         FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@ WHERE FLDBID = '%@';",modelClass,FLDBID]];
         // 创建对象
@@ -617,6 +621,10 @@ NSAssert([self fl_isExit:db table:modelClass autoCloseDB:NO], classNameTip);\
 
 - (NSArray *)fl_search:(FMDatabase *)db modelArr:(Class)modelClass{
     if ([db open]) {
+        BOOL success = [self fl_isExit:db table:modelClass autoCloseDB:NO];
+        if (!success) {
+            return nil;
+        }
         // 查询数据
         FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@",modelClass]];
         NSMutableArray *modelArrM = [NSMutableArray array];
@@ -699,7 +707,14 @@ NSAssert([self fl_isExit:db table:modelClass autoCloseDB:NO], classNameTip);\
 - (BOOL)fl_modify:(FMDatabase *)db model:(id)model byID:(NSString *)FLDBID autoCloseDB:(BOOL)autoCloseDB{
     if ([db open]) {
         // 判断是否已经存在
-        FL_ISEXITTABLE(db,[model class]);
+        BOOL success = [self fl_isExit:db table:[model class] autoCloseDB:NO];
+        if (!success) {
+            return NO;
+        }
+        success = [self fl_isExit:db table:[model class] autoCloseDB:NO];
+        if (!success) {
+            return NO;
+        }
         // 修改数据@"UPDATE t_student SET name = 'liwx' WHERE age > 12 AND age < 15;"
         NSMutableString *sql = [NSMutableString stringWithFormat:@"UPDATE %@ SET ",[model class]];
         unsigned int outCount;
@@ -721,7 +736,7 @@ NSAssert([self fl_isExit:db table:modelClass autoCloseDB:NO], classNameTip);\
         }
         
         [sql appendFormat:@" WHERE FLDBID = '%@';",FLDBID];
-        BOOL success = [db executeUpdate:sql];
+        success = [db executeUpdate:sql];
         if (autoCloseDB) {
             [db close];
         }
@@ -739,6 +754,11 @@ NSAssert([self fl_isExit:db table:modelClass autoCloseDB:NO], classNameTip);\
  */
 - (BOOL)fl_drop:(FMDatabase *)db table:(Class)modelClass{
     if ([db open]) {
+        // 此时如果添加判断，那么下面的删除表就会执行失败，原因不明
+//        BOOL success = [self fl_isExit:db table:modelClass autoCloseDB:NO];
+//        if (!success) {
+//            return NO;
+//        }
         // 删
         NSMutableString *sql = [NSMutableString stringWithFormat:@"DROP TABLE %@;",modelClass];
         BOOL success = [db executeUpdate:sql];
@@ -753,9 +773,13 @@ NSAssert([self fl_isExit:db table:modelClass autoCloseDB:NO], classNameTip);\
 - (BOOL)fl_delete:(FMDatabase *)db model:(Class)modelClass byId:(NSString *)FLDBID{
     if ([db open]) {
         // 删除数据
-        FL_ISEXITTABLE(db,modelClass);
+        BOOL success = [self fl_isExit:db table:modelClass autoCloseDB:NO];
+        if (!success) {
+            return NO;
+        }
+        
         NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@ WHERE  FLDBID = '%@';",modelClass,FLDBID];
-        BOOL success = [db executeUpdate:sql];
+        success = [db executeUpdate:sql];
         [db close];
         return success;
     }
@@ -767,9 +791,13 @@ NSAssert([self fl_isExit:db table:modelClass autoCloseDB:NO], classNameTip);\
 - (BOOL)fl_delete:(FMDatabase *)db allModel:(Class)modelClass{
     if ([db open]) {
         // 删除数据
-        FL_ISEXITTABLE(db,modelClass);
+//        FL_ISEXITTABLE(db,modelClass);
+        BOOL success = [self fl_isExit:db table:modelClass autoCloseDB:NO];
+        if (!success) {
+            return NO;
+        }
         NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@;",modelClass];
-        BOOL success = [db executeUpdate:sql];
+        success = [db executeUpdate:sql];
         [db close];
         return success;
     }

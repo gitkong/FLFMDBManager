@@ -10,8 +10,8 @@
 #import "FLFMDBManager.h"
 #import "FLStudentModel.h"
 #import "FLStudentTableViewCell.h"
-
 #import "FLFMDBQueueManager.h"
+#import "TestViewController.h"
 @interface ViewController ()
 @property (nonatomic,strong)NSMutableArray *modelArrM;
 @end
@@ -110,6 +110,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    
+    
     if ([FLFMDBMANAGER fl_isExitTable:[FLStudentModel class]]) {
         [FLFMDBMANAGER fl_dropTable:[FLStudentModel class]];
     }
@@ -125,6 +127,8 @@
     
     [self.tableView registerNib:[UINib nibWithNibName:@"FLStudentTableViewCell" bundle:nil] forCellReuseIdentifier:@"cell"];
     self.tableView.estimatedRowHeight = 100;
+    
+//    [self.navigationController pushViewController:[[TestViewController alloc] init] animated:YES];
 }
 
 - (IBAction)searchAllData:(id)sender {
