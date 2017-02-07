@@ -39,11 +39,9 @@
  *
  *  @param model 插入单个模型或者模型数组,如果此时传入的模型对应的FLDBID在表中已经存在，则替换更新旧的
  *  如果没创建表就自动先创建，表名为模型类名
- *  此时执行完毕后自动关闭数据库
  *
  */
 - (void)fl_insertModel:(id)model complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
-
 
 
 #pragma mark -- 查询
@@ -75,7 +73,7 @@
 /**
  *  @author gitKong
  *
- *  修改指定DBID的模型，执行完毕后自动关闭数据库，如果没有对应表，会有断言
+ *  修改指定DBID的模型，执行完毕后自动关闭数据库
  */
 
 - (void)fl_modifyModel:(id)model byID:(NSString *)FLDBID complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
@@ -85,21 +83,21 @@
 /**
  *  @author gitKong
  *
- *  删除指定表，执行完毕后自动关闭数据库，如果没有对应表，会有断言
+ *  删除指定表，执行完毕后自动关闭数据库
  */
 - (void)fl_dropTable:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 
 /**
  *  @author gitKong
  *
- *  删除指定表格的所有数据，执行完毕后自动关闭数据库，如果没有对应表，会有断言
+ *  删除指定表格的所有数据，执行完毕后自动关闭数据库
  */
 - (void)fl_deleteAllModel:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 
 /**
  *  @author gitKong
  *
- *  删除指定表中指定DBID的模型，执行完毕后自动关闭数据库，如果没有对应表，会有断言
+ *  删除指定表中指定DBID的模型，执行完毕后自动关闭数据库
  */
 - (void)fl_deleteModel:(Class)modelClass byId:(NSString *)FLDBID complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 

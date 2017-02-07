@@ -124,18 +124,43 @@
 //    
 //    [NSThread detachNewThreadSelector:@selector(writeDbTwo) toTarget:self withObject:nil];
     
+    FLStudentModel *model = [[FLStudentModel alloc] init];
+    
+    
+    [FLFMDBQUEUEMANAGER fl_isExitTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+        NSLog(@"flag = %zd",flag);
+        [FLFMDBQUEUEMANAGER fl_insertModel:model complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+            NSLog(@"flag = %zd",flag);
+            [FLFMDBQUEUEMANAGER fl_isExitTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+                NSLog(@"flag = %zd",flag);
+            }];
+        }];
+    }];
+    
+    
     
     // 解决死锁问题
+    /*
     [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
         if (flag) {
-            [FLFMDBQUEUEMANAGER fl_searchModelArr:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, NSArray *modelArr) {
-                NSLog(@"modelArr = %@",modelArr);
-                if (modelArr == nil) {
-                    [self writeDbTwo];
-                }
+            NSLog(@"创建成功");
+            
+            [FLFMDBQUEUEMANAGER fl_isExitTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+                NSLog(@"flag = %zd",flag);
             }];
+//            [FLFMDBQUEUEMANAGER fl_deleteAllModel:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//                NSLog(@"flag = %zd",flag);
+//            }];
+            
+//            [FLFMDBQUEUEMANAGER fl_searchModelArr:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, NSArray *modelArr) {
+//                NSLog(@"modelArr = %@",modelArr);
+//                if (modelArr == nil) {
+//                    [self writeDbTwo];
+//                }
+//            }];
         }
     }];
+     */
     
     
     [self.tableView registerNib:[UINib nibWithNibName:@"FLStudentTableViewCell" bundle:nil] forCellReuseIdentifier:@"cell"];

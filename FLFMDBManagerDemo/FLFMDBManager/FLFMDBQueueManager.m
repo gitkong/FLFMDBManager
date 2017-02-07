@@ -13,7 +13,9 @@
 #import "FLFMDBQueueManager.h"
 #import <objc/runtime.h>
 #import "FMDB.h"
-
+#import <sqlite3.h>
+#import <sqlite3ext.h>
+#import <sqlite3_private.h>
 //#define FL_ISEXITTABLE(db,modelClass) \
 //{NSString *classNameTip = [NSString stringWithFormat:@"%@ 表不存在，请先创建",modelClass]; \
 //NSAssert([self fl_isExit:db table:modelClass autoCloseDB:NO], classNameTip);\
@@ -192,28 +194,7 @@
 }
 
 - (void)fl_isExitTable:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
-    __block BOOL success = true;
-    __weak typeof(self) weakSelf = self;
-    //把任务包装到事务里
-    [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
-        __weak typeof(self) strongSelf = weakSelf;
-        
-        success = [strongSelf fl_isExit:db table:modelClass autoCloseDB:YES];
-        strongSelf.db = db;
-        // 回调
-        if (complete) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                complete(strongSelf,success);
-            });
-        }
-        
-        //如果有错误 返回
-        if (!success){
-            *rollback = YES;
-            return;
-        }
-    }];
-    
+    [self isExitTable:modelClass autoCloseDB:YES complete:complete]; 
 }
 
 
@@ -329,21 +310,21 @@
             if (0 == count){
                 // 操作完毕是否需要关闭
                 if (autoCloseDB) {
-                    [db close];
+                    [self fl_closeDB:db];
                 }
                 return NO;
             }
             else{
                 // 操作完毕是否需要关闭
                 if (autoCloseDB) {
-                    [db close];
+                    [self fl_closeDB:db];
                 }
                 return YES;
             }
         }
         // 操作完毕是否需要关闭
         if (autoCloseDB) {
-            [db close];
+            [self fl_closeDB:db];
         }
         return NO;
     }
@@ -363,7 +344,7 @@
     //把任务包装到事务里
     [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
         __weak typeof(self) strongSelf = weakSelf;
-        NSLog(@"%@",[NSThread currentThread]);
+//        NSLog(@"%@",[NSThread currentThread]);
         success = [strongSelf fl_create:db table:modelClass autoCloseDB:autoCloseDB];
         strongSelf.db = db;
         // 回调
@@ -386,7 +367,7 @@
         // 创表,判断是否已经存在
         if ([self fl_isExit:db table:modelClass autoCloseDB:NO]) {
             if (autoCloseDB) {
-                [db close];
+                [self fl_closeDB:db];
             }
             return YES;
         }
@@ -394,7 +375,7 @@
             BOOL success = [db executeUpdate:[self createTableSQL:modelClass]];
             // 关闭数据库
             if (autoCloseDB) {
-                [db close];
+                [self fl_closeDB:db];
             }
             return success;
         }
@@ -463,7 +444,7 @@
                 // 处理完毕关闭数据库
                 //                NSLog(@"fl_insertModel----------------------db--%p",db);
                 __strong typeof(weakSelf) strongSelf = weakSelf;
-                [manager.db close];
+                [strongSelf fl_closeDB:manager.db];
                 
                 if (complete) {
                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -489,7 +470,7 @@
     }
     // 操作完关闭数据库
     if (autoCloseDB) {
-        [db close];
+        [self fl_closeDB:db];
     }
     return success;
 }
@@ -512,7 +493,7 @@
                 if ([[judgeModle valueForKey:@"FLDBID"] isEqualToString:fl_dbid]) {
                     BOOL updataSuccess = [self fl_modify:db model:model byID:fl_dbid autoCloseDB:NO];
                     if (autoCloseDB) {
-                        [db close];
+                        [self fl_closeDB:db];
                     }
                     return updataSuccess;
                 }
@@ -520,7 +501,7 @@
                     BOOL insertSuccess = [db executeUpdate:[self createInsertSQL:model]];
                     // 最后一步操作完毕，询问是否需要关闭
                     if (autoCloseDB) {
-                        [db close];
+                        [self fl_closeDB:db];
                     }
                     return insertSuccess;
                 }
@@ -529,7 +510,7 @@
             else {
                 // 第二步操作失败，询问是否需要关闭,可能是创表失败，或者是已经有表
                 if (autoCloseDB) {
-                    [db close];
+                    [self fl_closeDB:db];
                 }
                 return NO;
             }
@@ -542,7 +523,7 @@
             if ([[judgeModle valueForKey:@"FLDBID"] isEqualToString:fl_dbid]) {
                 BOOL updataSuccess = [self fl_modify:db model:model byID:fl_dbid autoCloseDB:NO];
                 if (autoCloseDB) {
-                    [db close];
+                    [self fl_closeDB:db];
                 }
                 return updataSuccess;
             }
@@ -550,7 +531,7 @@
                 BOOL insertSuccess = [db executeUpdate:[self createInsertSQL:model]];
                 // 最后一步操作完毕，询问是否需要关闭
                 if (autoCloseDB) {
-                    [db close];
+                    [self fl_closeDB:db];
                 }
                 return insertSuccess;
             }
@@ -632,7 +613,7 @@
             }
         }
         if (autoCloseDB) {
-            [db close];
+            [self fl_closeDB:db];
         }
         return object;
     }
@@ -685,7 +666,7 @@
             // 添加
             [modelArrM addObject:object];
         }
-        [db close];
+        [self fl_closeDB:db];
         return modelArrM.copy;
     }
     else{
@@ -765,7 +746,7 @@
         [sql appendFormat:@" WHERE FLDBID = '%@';",FLDBID];
         success = [db executeUpdate:sql];
         if (autoCloseDB) {
-            [db close];
+            [self fl_closeDB:db];
         }
         return success;
     }
@@ -789,7 +770,7 @@
         // 删
         NSMutableString *sql = [NSMutableString stringWithFormat:@"DROP TABLE %@;",modelClass];
         BOOL success = [db executeUpdate:sql];
-        [db close];
+        [self fl_closeDB:db];
         return success;
     }
     else{
@@ -807,7 +788,7 @@
         
         NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@ WHERE  FLDBID = '%@';",modelClass,FLDBID];
         success = [db executeUpdate:sql];
-        [db close];
+        [self fl_closeDB:db];
         return success;
     }
     else{
@@ -825,11 +806,20 @@
         }
         NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@;",modelClass];
         success = [db executeUpdate:sql];
-        [db close];
+        [self fl_closeDB:db];
         return success;
     }
     else{
         return NO;
     }
+}
+
+- (void)fl_closeDB:(FMDatabase *)db{
+    /**
+     *  @author gitKong
+     *
+     *  不能主动关闭数据库
+     */
+//    [db close];
 }
 @end
