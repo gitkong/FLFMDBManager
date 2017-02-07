@@ -116,6 +116,23 @@
         [FLFMDBMANAGER fl_dropTable:[FLStudentModel class]];
     }
     
+    FLStudentModel *model = [[FLStudentModel alloc] init];
+    model.name_gitKong = @"gitKong";
+    model.age = 24;
+    model.FLDBID = [NSString stringWithFormat:@"gitKong_%zd",_index ++];
+    model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24,@"sex" : @"male"};
+    model.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"99",@"97", nil];
+    [FLFMDBMANAGER fl_insertModel:model];
+    
+    
+    FLStudentModel *model1 = [[FLStudentModel alloc] init];
+    model1.name_gitKong = @"clarence";
+    model1.age = 24;
+    model1.FLDBID = [NSString stringWithFormat:@"gitKong_%zd",_index ++];
+    model1.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24,@"sex" : @"male"};
+    model1.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"99",@"97", nil];
+    [FLFMDBMANAGER fl_insertModel:model1];
+    
     
     // 多线程测试
 //    [NSThread detachNewThreadSelector:@selector(writeDbOne) toTarget:self withObject:nil];
@@ -124,7 +141,7 @@
 //    
 //    [NSThread detachNewThreadSelector:@selector(writeDbTwo) toTarget:self withObject:nil];
     
-    FLStudentModel *model = [[FLStudentModel alloc] init];
+    
     
     
 //    [FLFMDBQUEUEMANAGER fl_isExitTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
@@ -137,14 +154,14 @@
 //        }];
 //    }];
     
-    [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-        if (flag) {
-            [FLFMDBQUEUEMANAGER fl_insertModel:model complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-                NSLog(@"flag = %zd",flag);
-                
-            }];
-        }
-    }];
+//    [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//        if (flag) {
+//            [FLFMDBQUEUEMANAGER fl_insertModel:model complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//                NSLog(@"flag = %zd",flag);
+//                
+//            }];
+//        }
+//    }];
     
     
     

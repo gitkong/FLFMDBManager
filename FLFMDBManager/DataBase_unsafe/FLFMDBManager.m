@@ -236,12 +236,36 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
  */
 - (BOOL)isExitTable:(Class)modelClass autoCloseDB:(BOOL)autoCloseDB{
     if ([self.dataBase open]){
-        BOOL success = [self.dataBase executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@",modelClass]];
+//        BOOL success = [self.dataBase executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@",modelClass]];
+//        // 操作完毕是否需要关闭
+//        if (autoCloseDB) {
+//            [self.dataBase close];
+//        }
+//        return success;
+        FMResultSet *rs = [self.dataBase executeQuery:@"select count(*) as 'count' from sqlite_master where type ='table' and name = ?", modelClass];
+        while ([rs next]){
+            NSInteger count = [rs intForColumn:@"count"];
+            
+            if (0 == count){
+                // 操作完毕是否需要关闭
+                if (autoCloseDB) {
+                    [self.dataBase close];
+                }
+                return NO;
+            }
+            else{
+                // 操作完毕是否需要关闭
+                if (autoCloseDB) {
+                    [self.dataBase close];
+                }
+                return YES;
+            }
+        }
         // 操作完毕是否需要关闭
         if (autoCloseDB) {
             [self.dataBase close];
         }
-        return success;
+        return NO;
     }
     else{
         return NO;
