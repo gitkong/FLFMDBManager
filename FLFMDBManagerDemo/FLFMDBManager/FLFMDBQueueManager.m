@@ -78,11 +78,14 @@
     [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
         __weak typeof(self) strongSelf = weakSelf;
         //        NSLog(@"fl_search----------------------db--%p",db);
+        NSLog(@"%@",[NSThread currentThread]);
         modelArr = [strongSelf fl_search:db modelArr:modelClass];
         strongSelf.db = db;
         // 回调
         if (complete) {
-            complete(strongSelf,modelArr);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(strongSelf,modelArr);
+            });
         }
         //如果有错误 返回
         if (!modelArr){
@@ -103,7 +106,9 @@
         strongSelf.db = db;
         // 回调
         if (complete) {
-            complete(strongSelf,success);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(strongSelf,success);
+            });
         }
         
         //如果有错误 返回
@@ -125,7 +130,9 @@
         strongSelf.db = db;
         // 回调
         if (complete) {
-            complete(strongSelf,success);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(strongSelf,success);
+            });
         }
         
         //如果有错误 返回
@@ -147,7 +154,9 @@
         strongSelf.db = db;
         // 回调
         if (complete) {
-            complete(strongSelf,success);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(strongSelf,success);
+            });
         }
         
         //如果有错误 返回
@@ -169,7 +178,9 @@
         strongSelf.db = db;
         // 回调
         if (complete) {
-            complete(strongSelf,success);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(strongSelf,success);
+            });
         }
         
         //如果有错误 返回
@@ -191,7 +202,9 @@
         strongSelf.db = db;
         // 回调
         if (complete) {
-            complete(strongSelf,success);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(strongSelf,success);
+            });
         }
         
         //如果有错误 返回
@@ -294,7 +307,9 @@
         strongSelf.db = db;
         // 回调回去
         if (complete) {
-            complete(strongSelf,success);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(strongSelf,success);
+            });
         }
         //如果有错误 返回
         if (!success){
@@ -348,12 +363,14 @@
     //把任务包装到事务里
     [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
         __weak typeof(self) strongSelf = weakSelf;
-        
+        NSLog(@"%@",[NSThread currentThread]);
         success = [strongSelf fl_create:db table:modelClass autoCloseDB:autoCloseDB];
         strongSelf.db = db;
         // 回调
         if (complete) {
-            complete(strongSelf,success);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(strongSelf,success);
+            });
         }
         
         //如果有错误 返回
@@ -402,7 +419,9 @@
         success = [strongSelf fl_insert:db model:model autoCloseDB:autoCloseDB];
         strongSelf.db = db;
         if (complete) {
-            complete(strongSelf,success);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(strongSelf,success);
+            });
         }
         //如果有错误 返回
         if (!success){
@@ -447,7 +466,9 @@
                 [manager.db close];
                 
                 if (complete) {
-                    complete(strongSelf,flag);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        complete(strongSelf,flag);
+                    });
                 }
             }];
             
@@ -556,7 +577,9 @@
         
         // 回调
         if (complete) {
-            complete(strongSelf,[strongSelf fl_search:db model:modelClass byID:FLDBID autoCloseDB:autoCloseDB]);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(strongSelf,[strongSelf fl_search:db model:modelClass byID:FLDBID autoCloseDB:autoCloseDB]);
+            });
         }
         
         //如果有错误 返回
@@ -687,13 +710,17 @@
             strongSelf.db = db;
             // 回调
             if (complete) {
-                complete(strongSelf,[strongSelf fl_modify:db model:model byID:FLDBID autoCloseDB:autoCloseDB]);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    complete(strongSelf,[strongSelf fl_modify:db model:model byID:FLDBID autoCloseDB:autoCloseDB]);
+                });
             }
         }
         else{
             // 回调
             if (complete) {
-                complete(strongSelf,NO);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    complete(strongSelf,NO);
+                });
             }
         }
         //如果有错误 返回

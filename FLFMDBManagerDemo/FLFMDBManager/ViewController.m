@@ -118,11 +118,24 @@
     
     
     // 多线程测试
-    [NSThread detachNewThreadSelector:@selector(writeDbOne) toTarget:self withObject:nil];
+//    [NSThread detachNewThreadSelector:@selector(writeDbOne) toTarget:self withObject:nil];
+//    
+//    [NSThread detachNewThreadSelector:@selector(readDb) toTarget:self withObject:nil];
+//    
+//    [NSThread detachNewThreadSelector:@selector(writeDbTwo) toTarget:self withObject:nil];
     
-    [NSThread detachNewThreadSelector:@selector(readDb) toTarget:self withObject:nil];
     
-    [NSThread detachNewThreadSelector:@selector(writeDbTwo) toTarget:self withObject:nil];
+    // 解决死锁问题
+    [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+        if (flag) {
+            [FLFMDBQUEUEMANAGER fl_searchModelArr:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, NSArray *modelArr) {
+                NSLog(@"modelArr = %@",modelArr);
+                if (modelArr == nil) {
+                    [self writeDbTwo];
+                }
+            }];
+        }
+    }];
     
     
     [self.tableView registerNib:[UINib nibWithNibName:@"FLStudentTableViewCell" bundle:nil] forCellReuseIdentifier:@"cell"];
