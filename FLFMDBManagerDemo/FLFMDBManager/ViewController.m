@@ -127,14 +127,23 @@
     FLStudentModel *model = [[FLStudentModel alloc] init];
     
     
-    [FLFMDBQUEUEMANAGER fl_isExitTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-        NSLog(@"flag = %zd",flag);
-        [FLFMDBQUEUEMANAGER fl_insertModel:model complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-            NSLog(@"flag = %zd",flag);
-            [FLFMDBQUEUEMANAGER fl_isExitTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//    [FLFMDBQUEUEMANAGER fl_isExitTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//        NSLog(@"flag = %zd",flag);
+//        [FLFMDBQUEUEMANAGER fl_insertModel:model complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//            NSLog(@"flag = %zd",flag);
+//            [FLFMDBQUEUEMANAGER fl_isExitTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//                NSLog(@"flag = %zd",flag);
+//            }];
+//        }];
+//    }];
+    
+    [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+        if (flag) {
+            [FLFMDBQUEUEMANAGER fl_insertModel:model complete:^(FLFMDBQueueManager *manager, BOOL flag) {
                 NSLog(@"flag = %zd",flag);
+                
             }];
-        }];
+        }
     }];
     
     

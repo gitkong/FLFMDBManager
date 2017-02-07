@@ -13,9 +13,6 @@
 #import "FLFMDBQueueManager.h"
 #import <objc/runtime.h>
 #import "FMDB.h"
-#import <sqlite3.h>
-#import <sqlite3ext.h>
-#import <sqlite3_private.h>
 //#define FL_ISEXITTABLE(db,modelClass) \
 //{NSString *classNameTip = [NSString stringWithFormat:@"%@ 表不存在，请先创建",modelClass]; \
 //NSAssert([self fl_isExit:db table:modelClass autoCloseDB:NO], classNameTip);\
