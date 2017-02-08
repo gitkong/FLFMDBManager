@@ -125,11 +125,15 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
 - (BOOL)fl_deleteAllModel:(Class)modelClass{
     if ([self.dataBase open]) {
         FL_ISEXITTABLE(modelClass);
-        // 删除数据
-        NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@;",modelClass];
-        BOOL success = [self.dataBase executeUpdate:sql];
-        [self.dataBase close];
-        return success;
+        NSArray *modelArr = [self fl_searchModelArr:modelClass];
+        if (modelArr && modelArr.count) {
+            // 删除数据
+            NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@;",modelClass];
+            BOOL success = [self.dataBase executeUpdate:sql];
+            [self.dataBase close];
+            return success;
+        }
+        return NO;
     }
     else{
         return NO;
@@ -139,11 +143,14 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
 - (BOOL)fl_deleteModel:(Class)modelClass byId:(NSString *)FLDBID{
     if ([self.dataBase open]) {
         FL_ISEXITTABLE(modelClass);
-        // 删除数据
-        NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@ WHERE  FLDBID = '%@';",modelClass,FLDBID];
-        BOOL success = [self.dataBase executeUpdate:sql];
-        [self.dataBase close];
-        return success;
+        if ([self fl_searchModel:modelClass byID:FLDBID autoCloseDB:NO]) {
+            // 删除数据
+            NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@ WHERE  FLDBID = '%@';",modelClass,FLDBID];
+            BOOL success = [self.dataBase executeUpdate:sql];
+            [self.dataBase close];
+            return success;
+        }
+        return NO;
     }
     else{
         return NO;
