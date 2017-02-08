@@ -56,52 +56,10 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
 }
 
 - (NSArray *)fl_searchModelArr:(Class)modelClass{
-    if ([self.dataBase open]) {
-        FL_ISEXITTABLE(modelClass);
-        // 查询数据
-        FMResultSet *rs = [self.dataBase executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@",modelClass]];
-        NSMutableArray *modelArrM = [NSMutableArray array];
-        // 遍历结果集
-        while ([rs next]) {
-            
-            // 创建对象
-            id object = [[modelClass class] new];
-            
-            unsigned int outCount;
-            Ivar * ivars = class_copyIvarList(modelClass, &outCount);
-            for (int i = 0; i < outCount; i ++) {
-                Ivar ivar = ivars[i];
-                NSString * key = [NSString stringWithUTF8String:ivar_getName(ivar)] ;
-                if([[key substringToIndex:1] isEqualToString:@"_"]){
-                    key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
-                }
-                
-                id value = [rs objectForColumnName:key];
-                if ([value isKindOfClass:[NSString class]]) {
-                    NSData *data = [value dataUsingEncoding:NSUTF8StringEncoding];
-                    id result = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-                    if ([result isKindOfClass:[NSDictionary class]] || [result isKindOfClass:[NSMutableDictionary class]] || [result isKindOfClass:[NSArray class]] || [result isKindOfClass:[NSMutableArray class]]) {
-                        [object setValue:result forKey:key];
-                    }
-                    else{
-                        [object setValue:value forKey:key];
-                    }
-                }
-                else{
-                    [object setValue:value forKey:key];
-                }
-            }
-            
-            // 添加
-            [modelArrM addObject:object];
-        }
-        [self.dataBase close];
-        return modelArrM.copy;
-    }
-    else{
-        return nil;
-    }
+    return  [self fl_searchModelArr:modelClass autoCloseDB:YES];
 }
+
+
 
 
 - (BOOL)fl_modifyModel:(id)model byID:(NSString *)FLDBID{
@@ -125,7 +83,7 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
 - (BOOL)fl_deleteAllModel:(Class)modelClass{
     if ([self.dataBase open]) {
         FL_ISEXITTABLE(modelClass);
-        NSArray *modelArr = [self fl_searchModelArr:modelClass];
+        NSArray *modelArr = [self fl_searchModelArr:modelClass autoCloseDB:NO];
         if (modelArr && modelArr.count) {
             // 删除数据
             NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@;",modelClass];
@@ -379,6 +337,56 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
     [self.dataBase close];
     // 全部插入成功才返回YES
     return flag;
+}
+
+- (NSArray *)fl_searchModelArr:(Class)modelClass autoCloseDB:(BOOL)autoCloseDB{
+    if ([self.dataBase open]) {
+        FL_ISEXITTABLE(modelClass);
+        // 查询数据
+        FMResultSet *rs = [self.dataBase executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@",modelClass]];
+        NSMutableArray *modelArrM = [NSMutableArray array];
+        // 遍历结果集
+        while ([rs next]) {
+            
+            // 创建对象
+            id object = [[modelClass class] new];
+            
+            unsigned int outCount;
+            Ivar * ivars = class_copyIvarList(modelClass, &outCount);
+            for (int i = 0; i < outCount; i ++) {
+                Ivar ivar = ivars[i];
+                NSString * key = [NSString stringWithUTF8String:ivar_getName(ivar)] ;
+                if([[key substringToIndex:1] isEqualToString:@"_"]){
+                    key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
+                }
+                
+                id value = [rs objectForColumnName:key];
+                if ([value isKindOfClass:[NSString class]]) {
+                    NSData *data = [value dataUsingEncoding:NSUTF8StringEncoding];
+                    id result = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+                    if ([result isKindOfClass:[NSDictionary class]] || [result isKindOfClass:[NSMutableDictionary class]] || [result isKindOfClass:[NSArray class]] || [result isKindOfClass:[NSMutableArray class]]) {
+                        [object setValue:result forKey:key];
+                    }
+                    else{
+                        [object setValue:value forKey:key];
+                    }
+                }
+                else{
+                    [object setValue:value forKey:key];
+                }
+            }
+            
+            // 添加
+            [modelArrM addObject:object];
+        }
+        if (autoCloseDB) {
+            [self.dataBase close];
+        }
+        return modelArrM.copy;
+    }
+    else{
+        return nil;
+    }
 }
 
 - (id)fl_searchModel:(Class)modelClass byID:(NSString *)FLDBID autoCloseDB:(BOOL)autoCloseDB{
