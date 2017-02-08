@@ -34,7 +34,7 @@
         instance = [[self alloc] init];
         // 1、获取沙盒中数据库的路径
         NSString *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
-        NSString *sqlFilePath = [path stringByAppendingPathComponent:@"clarence.sqlite"];
+        NSString *sqlFilePath = [path stringByAppendingPathComponent:@"gitkong.sqlite"];
         
         // 2、判断 caches 文件夹是否存在.不存在则创建
         NSFileManager *manager = [NSFileManager defaultManager];
@@ -49,7 +49,7 @@
     return instance;
 }
 
-#pragma mark -- private method
+#pragma mark -- public method
 
 
 - (void)fl_createTable:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
@@ -432,10 +432,10 @@
     
     for (NSInteger index = 0; index < modelArr.count; index ++) {
         id model = modelArr[index];
-        // 处理过程中不关闭数据库
-        [self fl_insertModel:model autoCloseDB:NO complete:nil];
         
+        NSLog(@"index = %zd",index);
         if (index == modelArr.count - 1) {
+            NSLog(@"index ---------");
             __weak typeof(self) weakSelf = self;
             [self fl_insertModel:model autoCloseDB:NO complete:^(FLFMDBQueueManager *manager, BOOL flag) {
                 // 处理完毕关闭数据库
@@ -449,8 +449,11 @@
                     });
                 }
             }];
-            
+            return;
         }
+        
+        // 处理过程中不关闭数据库
+        [self fl_insertModel:model autoCloseDB:NO complete:nil];
         
     }
 }
@@ -580,10 +583,10 @@
         // 查询数据
         FMResultSet *rs = [db executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@ WHERE FLDBID = '%@';",modelClass,FLDBID]];
         // 创建对象
-        id object = [[modelClass class] new];
+        id object = nil;
         // 遍历结果集
         while ([rs next]) {
-            
+            object = [[modelClass class] new];
             unsigned int outCount;
             Ivar * ivars = class_copyIvarList(modelClass, &outCount);
             for (int i = 0; i < outCount; i ++) {
@@ -782,9 +785,14 @@
         if (!success) {
             return NO;
         }
-        
-        NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@ WHERE  FLDBID = '%@';",modelClass,FLDBID];
-        success = [db executeUpdate:sql];
+        // 判断是否存在
+        if ([self fl_search:db model:modelClass byID:FLDBID autoCloseDB:NO]) {
+            NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@ WHERE  FLDBID = '%@';",modelClass,FLDBID];
+            success = [db executeUpdate:sql];
+        }
+        else{
+            success = NO;
+        }
         [self fl_closeDB:db];
         return success;
     }
@@ -801,8 +809,15 @@
         if (!success) {
             return NO;
         }
-        NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@;",modelClass];
-        success = [db executeUpdate:sql];
+        // 数据是否存在
+        NSArray *modelArr = [self fl_search:db modelArr:modelClass];
+        if (modelArr && modelArr.count) {
+            NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@;",modelClass];
+            success = [db executeUpdate:sql];
+        }
+        else{
+            success = NO;
+        }
         [self fl_closeDB:db];
         return success;
     }

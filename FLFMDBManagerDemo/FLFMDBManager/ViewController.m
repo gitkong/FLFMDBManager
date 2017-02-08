@@ -116,26 +116,43 @@
         [FLFMDBMANAGER fl_dropTable:[FLStudentModel class]];
     }
     
-    FLStudentModel *model = [[FLStudentModel alloc] init];
-    model.name_gitKong = @"gitKong";
-    model.age = 24;
-    model.FLDBID = [NSString stringWithFormat:@"gitKong_%zd",_index ++];
-    model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24,@"sex" : @"male"};
-    model.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"99",@"97", nil];
-    [FLFMDBMANAGER fl_insertModel:model];
+    NSMutableArray *arrM = [NSMutableArray array];
+    for (NSInteger index = 0; index < 20; index ++) {
+        
+        FLStudentModel *model = [[FLStudentModel alloc] init];
+        model.name_gitKong = @"clarence";
+        model.age = 24;
+        model.FLDBID = [NSString stringWithFormat:@"clarence_%zd",index];
+        model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24};
+        model.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"90",@"80", nil];
+        [arrM addObject:model];
+        _index = index + 1;
+    }
+    [FLFMDBQUEUEMANAGER fl_insertModel:arrM complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+        NSLog(@"%zd",flag);
+    }];
     
     
-    FLStudentModel *model1 = [[FLStudentModel alloc] init];
-    model1.name_gitKong = @"clarence";
-    model1.age = 24;
-    model1.FLDBID = [NSString stringWithFormat:@"gitKong_%zd",_index ++];
-    model1.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24,@"sex" : @"male"};
-    model1.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"99",@"97", nil];
-    [FLFMDBMANAGER fl_insertModel:model1];
-    
-    
-    BOOL flag = [FLFMDBMANAGER fl_deleteModel:[FLStudentModel class] byId:@"xxx"];
-    NSLog(@"flag = %zd",flag);
+//    FLStudentModel *model = [[FLStudentModel alloc] init];
+//    model.name_gitKong = @"gitKong";
+//    model.age = 24;
+//    model.FLDBID = [NSString stringWithFormat:@"gitKong_%zd",_index ++];
+//    model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24,@"sex" : @"male"};
+//    model.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"99",@"97", nil];
+//    [FLFMDBMANAGER fl_insertModel:model];
+//    
+//    
+//    FLStudentModel *model1 = [[FLStudentModel alloc] init];
+//    model1.name_gitKong = @"clarence";
+//    model1.age = 24;
+//    model1.FLDBID = [NSString stringWithFormat:@"gitKong_%zd",_index ++];
+//    model1.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24,@"sex" : @"male"};
+//    model1.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"99",@"97", nil];
+//    [FLFMDBMANAGER fl_insertModel:model1];
+//    
+//    
+//    BOOL flag = [FLFMDBMANAGER fl_deleteModel:[FLStudentModel class] byId:@"xxx"];
+//    NSLog(@"flag = %zd",flag);
     
     // 多线程测试
 //    [NSThread detachNewThreadSelector:@selector(writeDbOne) toTarget:self withObject:nil];

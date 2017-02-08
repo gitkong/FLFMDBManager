@@ -28,7 +28,7 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
     dispatch_once(&onceToken, ^{
         instance = [[self alloc] init];
         NSString *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
-        NSString *sqlFilePath = [path stringByAppendingPathComponent:@"clarence.sqlite"];
+        NSString *sqlFilePath = [path stringByAppendingPathComponent:@"gitkong.sqlite"];
         // 通过路径创建数据库
         instance.dataBase = [FMDatabase databaseWithPath:sqlFilePath];
     });
