@@ -387,10 +387,10 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
         // 查询数据
         FMResultSet *rs = [self.dataBase executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@ WHERE FLDBID = '%@';",modelClass,FLDBID]];
         // 创建对象
-        id object = [[modelClass class] new];
+        id object = nil;
         // 遍历结果集
         while ([rs next]) {
-            
+            object = [[modelClass class] new];
             unsigned int outCount;
             Ivar * ivars = class_copyIvarList(modelClass, &outCount);
             for (int i = 0; i < outCount; i ++) {
@@ -415,6 +415,7 @@ NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
                     [object setValue:value forKey:key];
                 }
             }
+            
         }
         if (autoCloseDB) {
             [self.dataBase close];

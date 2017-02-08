@@ -134,6 +134,9 @@
     [FLFMDBMANAGER fl_insertModel:model1];
     
     
+    BOOL flag = [FLFMDBMANAGER fl_deleteModel:[FLStudentModel class] byId:@"xxx"];
+    NSLog(@"flag = %zd",flag);
+    
     // 多线程测试
 //    [NSThread detachNewThreadSelector:@selector(writeDbOne) toTarget:self withObject:nil];
 //    
