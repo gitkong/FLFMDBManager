@@ -12,7 +12,9 @@
 
 #import <Foundation/Foundation.h>
 
-#define FLFMDBMANAGER [FLFMDBManager shareManager]
+#define FLDB_DEFAULT_NAME @"gitkong"
+#define FLFMDBMANAGER [FLFMDBManager shareManager:FLDB_DEFAULT_NAME]
+#define FLFMDBMANAGERX(DB_NAME) [FLFMDBManager shareManager:DB_NAME]
 
 @interface FLFMDBManager : NSObject
 
@@ -21,7 +23,7 @@
  *
  *  单例创建，项目唯一
  */
-+ (instancetype)shareManager;
++ (instancetype)shareManager:(NSString *)fl_dbName;
 
 #pragma mark -- 创表
 
@@ -87,6 +89,12 @@
  *  删除指定表，执行完毕后自动关闭数据库，如果没有对应表，会有断言
  */
 - (BOOL)fl_dropTable:(Class)modelClass;
+/**
+ *  @author gitKong
+ *
+ *  删除数据库
+ */
+- (BOOL)fl_dropDB;
 /**
  *  @author Clarence
  *

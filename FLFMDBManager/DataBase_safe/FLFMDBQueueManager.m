@@ -13,39 +13,50 @@
 #import "FLFMDBQueueManager.h"
 #import <objc/runtime.h>
 #import "FMDB.h"
-//#define FL_ISEXITTABLE(db,modelClass) \
-//{NSString *classNameTip = [NSString stringWithFormat:@"%@ 表不存在，请先创建",modelClass]; \
-//NSAssert([self fl_isExit:db table:modelClass autoCloseDB:NO], classNameTip);\
-//}
+
+#define FLCURRENTDBQUEUE (FMDatabaseQueue *)self.queueDictM[self.dbName]
 
 @interface FLFMDBQueueManager ()
 
-@property (nonatomic,strong)FMDatabaseQueue *queue;
+@property (nonatomic,copy)NSString *dbName;
 
-@property (nonatomic,weak)FMDatabase *db;
+@property (nonatomic,strong)NSMutableDictionary *queueDictM;
 
 @end
 
 @implementation FLFMDBQueueManager
-+ (instancetype)shareManager{
-    static FLFMDBQueueManager *instance;
+
++ (instancetype)shareManager:(NSString *)fl_dbName{
+    static FLFMDBQueueManager *instance = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         instance = [[self alloc] init];
-        // 1、获取沙盒中数据库的路径
-        NSString *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
-        NSString *sqlFilePath = [path stringByAppendingPathComponent:@"gitkong.sqlite"];
-        
-        // 2、判断 caches 文件夹是否存在.不存在则创建
-        NSFileManager *manager = [NSFileManager defaultManager];
-        BOOL tag = [manager fileExistsAtPath:path isDirectory:NULL];
-        
-        if (!tag) {
-            [manager createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:NULL];
-        }
-        // 通过路径创建数据库
-        instance.queue = [FMDatabaseQueue databaseQueueWithPath:sqlFilePath];
     });
+    // 1、获取沙盒中数据库的路径
+    NSString *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
+    
+    if (fl_dbName && ![fl_dbName isEqualToString:@""]) {
+        instance.dbName = fl_dbName;
+    }
+    else{
+        instance.dbName = FLDB_DEFAULT_NAME;
+    }
+    NSString *sqlFilePath = [path stringByAppendingPathComponent:[instance.dbName stringByAppendingString:@".sqlite"]];
+    
+    
+    // 2、判断 caches 文件夹是否存在.不存在则创建
+    NSFileManager *manager = [NSFileManager defaultManager];
+    BOOL isDirectory = YES;
+    BOOL tag = [manager fileExistsAtPath:sqlFilePath isDirectory:&isDirectory];
+    
+    if (!tag) {
+        [manager createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:NULL];
+        // 通过路径创建数据库
+        FMDatabaseQueue *queue = [FMDatabaseQueue databaseQueueWithPath:sqlFilePath];
+
+        [instance.queueDictM setValue:queue forKey:instance.dbName];
+    }
+    
     return instance;
 }
 
@@ -74,12 +85,12 @@
     __block NSArray *modelArr = nil;
     __weak typeof(self) weakSelf = self;
     //把任务包装到事务里
-    [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
+    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
         __weak typeof(self) strongSelf = weakSelf;
         //        NSLog(@"fl_search----------------------db--%p",db);
         NSLog(@"%@",[NSThread currentThread]);
         modelArr = [strongSelf fl_search:db modelArr:modelClass];
-        strongSelf.db = db;
+        //strongSelf.db = db;
         // 回调
         if (complete) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -98,11 +109,11 @@
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
     //把任务包装到事务里
-    [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
+    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
         __weak typeof(self) strongSelf = weakSelf;
         
         success = [strongSelf fl_modify:db model:model byID:FLDBID autoCloseDB:YES];
-        strongSelf.db = db;
+        //strongSelf.db = db;
         // 回调
         if (complete) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -122,11 +133,11 @@
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
     //把任务包装到事务里
-    [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
+    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
         __weak typeof(self) strongSelf = weakSelf;
         
         success = [strongSelf fl_drop:db table:modelClass];
-        strongSelf.db = db;
+        //strongSelf.db = db;
         // 回调
         if (complete) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -142,15 +153,44 @@
     }];
 }
 
+//- (void)fl_dropAllTable:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
+//    NSString *sqlStr = @"select table_name from information_schema.tables where TABLE_SCHEMA = 'gitkong.sqlite'";
+//    __weak typeof(self) weakSelf = self;
+//    __block BOOL success = true;
+//    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback) {
+//        
+//        __weak typeof(self) strongSelf = weakSelf;
+//        FMResultSet *rs = [db executeQuery:sqlStr];
+//        while ([rs next]) {
+//            NSString *table_name = [rs stringForColumn:@"table_name"];
+//            NSLog(@"%@",table_name);
+//        }
+//        //strongSelf.db = db;
+//        // 回调
+//        if (complete) {
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                complete(strongSelf,success);
+//            });
+//        }
+//    }];
+//}
+
+- (BOOL)fl_dropDB{
+    NSString *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
+    NSString *sqlFilePath = [path stringByAppendingPathComponent:[self.dbName stringByAppendingString:@".sqlite"]];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    return [fileManager removeItemAtPath:sqlFilePath error:NULL];
+}
+
 - (void)fl_deleteAllModel:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
     //把任务包装到事务里
-    [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
+    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
         __weak typeof(self) strongSelf = weakSelf;
         
         success = [strongSelf fl_delete:db allModel:modelClass];
-        strongSelf.db = db;
+        //strongSelf.db = db;
         // 回调
         if (complete) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -170,11 +210,11 @@
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
     //把任务包装到事务里
-    [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
+    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
         __weak typeof(self) strongSelf = weakSelf;
         
         success = [strongSelf fl_delete:db model:modelClass byId:FLDBID];
-        strongSelf.db = db;
+        //strongSelf.db = db;
         // 回调
         if (complete) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -278,11 +318,11 @@
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
     //把任务包装到事务里
-    [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
+    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
         __weak typeof(self) strongSelf = weakSelf;
         
         success = [strongSelf fl_isExit:db table:modelClass autoCloseDB:autoCloseDB];
-        strongSelf.db = db;
+        //strongSelf.db = db;
         // 回调回去
         if (complete) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -339,11 +379,11 @@
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
     //把任务包装到事务里
-    [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
+    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
         __weak typeof(self) strongSelf = weakSelf;
 //        NSLog(@"%@",[NSThread currentThread]);
         success = [strongSelf fl_create:db table:modelClass autoCloseDB:autoCloseDB];
-        strongSelf.db = db;
+        //strongSelf.db = db;
         // 回调
         if (complete) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -391,11 +431,11 @@
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
     //把任务包装到事务里
-    [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
+    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
         __weak typeof(self) strongSelf = weakSelf;
         
         success = [strongSelf fl_insert:db model:model autoCloseDB:autoCloseDB];
-        strongSelf.db = db;
+        //strongSelf.db = db;
         if (complete) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 complete(strongSelf,success);
@@ -415,11 +455,11 @@
     //    __block BOOL success = true;
     //    __weak typeof(self) weakSelf = self;
     //    //把任务包装到事务里
-    //    [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
+    //    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
     //        __weak typeof(self) strongSelf = weakSelf;
     //        NSLog(@"fl_insertModel----------------------db--%p",db);
     //        success = [strongSelf fl_insert:db modelArr:modelArr autoCloseDB:YES];
-    //            strongSelf.db = db;
+    //            //strongSelf.db = db;
     //
     //        complete(strongSelf,success);
     //
@@ -438,10 +478,9 @@
             NSLog(@"index ---------");
             __weak typeof(self) weakSelf = self;
             [self fl_insertModel:model autoCloseDB:NO complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-                // 处理完毕关闭数据库
-                //                NSLog(@"fl_insertModel----------------------db--%p",db);
+                
                 __strong typeof(weakSelf) strongSelf = weakSelf;
-                [strongSelf fl_closeDB:manager.db];
+//                [strongSelf fl_closeDB:manager.db];
                 
                 if (complete) {
                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -552,9 +591,9 @@
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
     //把任务包装到事务里
-    [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
+    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
         __weak typeof(self) strongSelf = weakSelf;
-        strongSelf.db = db;
+        //strongSelf.db = db;
         
         // 回调
         if (complete) {
@@ -684,11 +723,11 @@
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
     //把任务包装到事务里
-    [self.queue inTransaction:^(FMDatabase *db, BOOL *rollback){
+    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
         __weak typeof(self) strongSelf = weakSelf;
         success = [db open];
         if (success) {
-            strongSelf.db = db;
+            //strongSelf.db = db;
             // 回调
             if (complete) {
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -826,6 +865,8 @@
     }
 }
 
+
+
 - (void)fl_closeDB:(FMDatabase *)db{
     /**
      *  @author gitKong
@@ -833,5 +874,14 @@
      *  不能主动关闭数据库
      */
 //    [db close];
+}
+
+
+#pragma mark -- Setter & Getter
+- (NSMutableDictionary *)queueDictM{
+    if (_queueDictM == nil) {
+        _queueDictM = [NSMutableDictionary dictionary];
+    }
+    return _queueDictM;
 }
 @end

@@ -112,9 +112,6 @@
     // Do any additional setup after loading the view, typically from a nib.
     
     
-    if ([FLFMDBMANAGER fl_isExitTable:[FLStudentModel class]]) {
-        [FLFMDBMANAGER fl_dropTable:[FLStudentModel class]];
-    }
     
     NSMutableArray *arrM = [NSMutableArray array];
     for (NSInteger index = 0; index < 20; index ++) {
@@ -132,6 +129,9 @@
         NSLog(@"%zd",flag);
     }];
     
+    FLFMDBQUEUEMANAGERX(@"dd");
+    
+    [FLFMDBQUEUEMANAGERX(@"dd") fl_dropDB];
     
 //    FLStudentModel *model = [[FLStudentModel alloc] init];
 //    model.name_gitKong = @"gitKong";
@@ -273,6 +273,7 @@
 }
 
 - (IBAction)searchData:(id)sender {
+    
     UIAlertController *vc = [UIAlertController alertControllerWithTitle:@"输入FLDBID" message:nil preferredStyle:UIAlertControllerStyleAlert];
     __weak typeof(vc) weakVc = vc;
     __weak typeof(self) weakSelf = self;

@@ -12,8 +12,11 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+#define FLDB_DEFAULT_NAME @"gitkong"
 
-#define FLFMDBQUEUEMANAGER [FLFMDBQueueManager shareManager]
+#define FLFMDBQUEUEMANAGER [FLFMDBQueueManager shareManager:FLDB_DEFAULT_NAME]
+
+#define FLFMDBQUEUEMANAGERX(DB_NAME) [FLFMDBQueueManager shareManager:DB_NAME]
 
 @interface FLFMDBQueueManager : NSObject
 /**
@@ -21,7 +24,7 @@
  *
  *  单例创建，项目唯一
  */
-+ (instancetype)shareManager;
++ (instancetype)shareManager:(NSString *)fl_dbName;
 
 #pragma mark -- 创表
 
@@ -87,6 +90,12 @@
  */
 - (void)fl_dropTable:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 
+/**
+ *  @author gitKong
+ *
+ *  删除数据库
+ */
+- (BOOL)fl_dropDB;
 /**
  *  @author gitKong
  *
