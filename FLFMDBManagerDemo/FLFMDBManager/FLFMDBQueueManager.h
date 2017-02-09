@@ -31,7 +31,7 @@
 /**
  *  @author gitKong
  *
- *  根据类名创建表，如果有则跳过，没有才创建，执行完毕后自动关闭数据库
+ *  根据类名创建表，如果有则跳过，没有才创建
  */
 - (void)fl_createTable:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 
@@ -52,21 +52,21 @@
 /**
  *  @author gitKong
  *
- *  查询指定表是否存在，执行完毕后自动关闭数据库
+ *  查询指定表是否存在
  */
 - (void)fl_isExitTable:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 
 /**
  *  @author gitKong
  *
- *  查找指定表中指定DBID的模型，执行完毕后自动关闭数据库
+ *  查找指定表中指定DBID的模型
  */
 - (void)fl_searchModel:(Class)modelClass byID:(NSString *)FLDBID complete:(void(^)(FLFMDBQueueManager *manager,id model))complete;
 
 /**
  *  @author gitKong
  *
- *  查找指定表中模型数组（所有的），执行完毕后自动关闭数据库
+ *  查找指定表中模型数组（所有的）
  */
 - (void)fl_searchModelArr:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager,NSArray *modelArr))complete;
 
@@ -76,7 +76,7 @@
 /**
  *  @author gitKong
  *
- *  修改指定DBID的模型，执行完毕后自动关闭数据库
+ *  修改指定DBID的模型，
  */
 
 - (void)fl_modifyModel:(id)model byID:(NSString *)FLDBID complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
@@ -86,7 +86,7 @@
 /**
  *  @author gitKong
  *
- *  删除指定表，执行完毕后自动关闭数据库
+ *  删除指定表
  */
 - (void)fl_dropTable:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 
@@ -99,14 +99,14 @@
 /**
  *  @author gitKong
  *
- *  删除指定表格的所有数据，执行完毕后自动关闭数据库
+ *  删除指定表格的所有数据
  */
 - (void)fl_deleteAllModel:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 
 /**
  *  @author gitKong
  *
- *  删除指定表中指定DBID的模型，执行完毕后自动关闭数据库
+ *  删除指定表中指定DBID的模型
  */
 - (void)fl_deleteModel:(Class)modelClass byId:(NSString *)FLDBID complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 
