@@ -27,35 +27,48 @@
 @implementation FLFMDBQueueManager
 
 + (instancetype)shareManager:(NSString *)fl_dbName{
-    static FLFMDBQueueManager *instance = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        instance = [[self alloc] init];
-    });
+    
     // 1、获取沙盒中数据库的路径
     NSString *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
-    
+    NSString *tempDBName = nil;
     if (fl_dbName && ![fl_dbName isEqualToString:@""]) {
-        instance.dbName = fl_dbName;
+        tempDBName = fl_dbName;
     }
     else{
-        instance.dbName = FLDB_DEFAULT_NAME;
+        tempDBName = FLDB_DEFAULT_NAME;
     }
-    NSString *sqlFilePath = [path stringByAppendingPathComponent:[instance.dbName stringByAppendingString:@".sqlite"]];
     
+    NSString *sqlFilePath = [path stringByAppendingPathComponent:[tempDBName stringByAppendingString:@".sqlite"]];
     
     // 2、判断 caches 文件夹是否存在.不存在则创建
     NSFileManager *manager = [NSFileManager defaultManager];
     BOOL isDirectory = YES;
     BOOL tag = [manager fileExistsAtPath:sqlFilePath isDirectory:&isDirectory];
     
+    
+    static FLFMDBQueueManager *instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[self alloc] init];
+        instance.queueDictM = [NSMutableDictionary dictionary];
+        if (tag) {
+            // 通过路径创建数据库
+            FMDatabaseQueue *queue = [FMDatabaseQueue databaseQueueWithPath:sqlFilePath];
+            [instance.queueDictM setValue:queue forKey:tempDBName];
+        }
+    });
+    
     if (!tag) {
         [manager createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:NULL];
         // 通过路径创建数据库
         FMDatabaseQueue *queue = [FMDatabaseQueue databaseQueueWithPath:sqlFilePath];
-
-        [instance.queueDictM setValue:queue forKey:instance.dbName];
+        if (!instance.queueDictM) {
+            instance.queueDictM = [NSMutableDictionary dictionary];
+        }
+        [instance.queueDictM setValue:queue forKey:tempDBName];
     }
+    
+    instance.dbName = tempDBName;
     
     return instance;
 }
@@ -68,12 +81,16 @@
 }
 
 - (void)fl_insertModel:(id)model complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
+    [self fl_insertModel:model autoCloseDB:YES complete:complete];
+}
+
+- (void)fl_insertModel:(id)model autoCloseDB:(BOOL)autoCloseDB complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
     if ([model isKindOfClass:[NSArray class]] || [model isKindOfClass:[NSMutableArray class]]) {
         NSArray *modelArr = (NSArray *)model;
-        [self fl_insertModelArr:modelArr complete:complete];
+        [self fl_insertModelArr:modelArr autoCloseDB:autoCloseDB complete:complete];
     }
     else{
-        [self fl_insertModel:model autoCloseDB:YES complete:complete];
+        [self fl_insertSingleModel:model inAsync:YES autoCloseDB:autoCloseDB complete:complete];
     }
 }
 
@@ -82,75 +99,88 @@
 }
 
 - (void)fl_searchModelArr:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager,NSArray *modelArr))complete{
+    [self fl_searchModelArr:modelClass autoCloseDB:YES complete:complete];
+}
+
+- (void)fl_searchModelArr:(Class)modelClass autoCloseDB:(BOOL)autoCloseDB complete:(void(^)(FLFMDBQueueManager *manager,NSArray *modelArr))complete{
     __block NSArray *modelArr = nil;
     __weak typeof(self) weakSelf = self;
-    //把任务包装到事务里
-    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-        __weak typeof(self) strongSelf = weakSelf;
-        //        NSLog(@"fl_search----------------------db--%p",db);
-        NSLog(@"%@",[NSThread currentThread]);
-        modelArr = [strongSelf fl_search:db modelArr:modelClass];
-        //strongSelf.db = db;
-        // 回调
-        if (complete) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                complete(strongSelf,modelArr);
-            });
-        }
-        //如果有错误 返回
-        if (!modelArr){
-            *rollback = YES;
-            return;
-        }
-    }];
+    FLDISPATCH_ASYNC_GLOBAL(^{
+        //把任务包装到事务里
+        [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
+            __weak typeof(self) strongSelf = weakSelf;
+            modelArr = [strongSelf fl_search:db modelArr:modelClass autoCloseDB:autoCloseDB];
+            // 回调
+            if (complete) {
+                FLDISPATCH_ASYNC_MAIN(^{
+                    complete(strongSelf,modelArr);
+                });
+            }
+            //如果有错误 返回
+            if (!modelArr){
+                *rollback = YES;
+                return;
+            }
+        }];
+    });
 }
 
 - (void)fl_modifyModel:(id)model byID:(NSString *)FLDBID complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
+    [self fl_modifyModel:model byID:FLDBID autoCloseDB:YES complete:complete];
+}
+
+- (void)fl_modifyModel:(id)model byID:(NSString *)FLDBID autoCloseDB:(BOOL)autoCloseDB complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
-    //把任务包装到事务里
-    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-        __weak typeof(self) strongSelf = weakSelf;
-        
-        success = [strongSelf fl_modify:db model:model byID:FLDBID autoCloseDB:YES];
-        //strongSelf.db = db;
-        // 回调
-        if (complete) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                complete(strongSelf,success);
-            });
-        }
-        
-        //如果有错误 返回
-        if (!success){
-            *rollback = YES;
-            return;
-        }
-    }];
+    FLDISPATCH_ASYNC_GLOBAL(^{
+        //把任务包装到事务里
+        [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
+            __weak typeof(self) strongSelf = weakSelf;
+            
+            success = [strongSelf fl_modify:db model:model byID:FLDBID autoCloseDB:autoCloseDB];
+            // 回调
+            if (complete) {
+                FLDISPATCH_ASYNC_MAIN(^{
+                    complete(strongSelf,success);
+                });
+            }
+            
+            //如果有错误 返回
+            if (!success){
+                *rollback = YES;
+                return;
+            }
+        }];
+    });
 }
 
 - (void)fl_dropTable:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
+    [self fl_dropTable:modelClass autoCloseDB:YES complete:complete];
+}
+
+- (void)fl_dropTable:(Class)modelClass autoCloseDB:(BOOL)autoCloseDB complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
-    //把任务包装到事务里
-    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-        __weak typeof(self) strongSelf = weakSelf;
-        
-        success = [strongSelf fl_drop:db table:modelClass];
-        //strongSelf.db = db;
-        // 回调
-        if (complete) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                complete(strongSelf,success);
-            });
-        }
-        
-        //如果有错误 返回
-        if (!success){
-            *rollback = YES;
-            return;
-        }
-    }];
+    FLDISPATCH_ASYNC_GLOBAL(^{
+        //把任务包装到事务里
+        [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
+            __weak typeof(self) strongSelf = weakSelf;
+            
+            success = [strongSelf fl_drop:db table:modelClass autoCloseDB:autoCloseDB];
+            // 回调
+            if (complete) {
+                FLDISPATCH_ASYNC_MAIN(^{
+                    complete(strongSelf,success);
+                });
+            }
+            
+            //如果有错误 返回
+            if (!success){
+                *rollback = YES;
+                return;
+            }
+        }];
+    });
 }
 
 //- (void)fl_dropAllTable:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
@@ -183,51 +213,62 @@
 }
 
 - (void)fl_deleteAllModel:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
+    [self fl_deleteAllModel:modelClass autoCloseDB:YES complete:complete];
+}
+
+- (void)fl_deleteAllModel:(Class)modelClass autoCloseDB:(BOOL)autoCloseDB complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
-    //把任务包装到事务里
-    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-        __weak typeof(self) strongSelf = weakSelf;
-        
-        success = [strongSelf fl_delete:db allModel:modelClass];
-        //strongSelf.db = db;
-        // 回调
-        if (complete) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                complete(strongSelf,success);
-            });
-        }
-        
-        //如果有错误 返回
-        if (!success){
-            *rollback = YES;
-            return;
-        }
-    }];
+    
+    FLDISPATCH_ASYNC_GLOBAL(^{
+        //把任务包装到事务里
+        [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
+            __weak typeof(self) strongSelf = weakSelf;
+            
+            success = [strongSelf fl_delete:db allModel:modelClass autoCloseDB:autoCloseDB];
+            // 回调
+            if (complete) {
+                FLDISPATCH_ASYNC_MAIN(^{
+                    complete(strongSelf,success);
+                });
+            }
+            
+            //如果有错误 返回
+            if (!success){
+                *rollback = YES;
+                return;
+            }
+        }];
+    });
 }
 
 - (void)fl_deleteModel:(Class)modelClass byId:(NSString *)FLDBID complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
+    [self fl_deleteModel:modelClass byId:FLDBID autoCloseDB:YES complete:complete];
+}
+
+- (void)fl_deleteModel:(Class)modelClass byId:(NSString *)FLDBID autoCloseDB:(BOOL)autoCloseDB complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
-    //把任务包装到事务里
-    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-        __weak typeof(self) strongSelf = weakSelf;
-        
-        success = [strongSelf fl_delete:db model:modelClass byId:FLDBID];
-        //strongSelf.db = db;
-        // 回调
-        if (complete) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                complete(strongSelf,success);
-            });
-        }
-        
-        //如果有错误 返回
-        if (!success){
-            *rollback = YES;
-            return;
-        }
-    }];
+    FLDISPATCH_ASYNC_GLOBAL(^{
+        //把任务包装到事务里
+        [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
+            __weak typeof(self) strongSelf = weakSelf;
+            
+            success = [strongSelf fl_delete:db model:modelClass byId:FLDBID autoCloseDB:autoCloseDB];
+            // 回调
+            if (complete) {
+                FLDISPATCH_ASYNC_MAIN(^{
+                    complete(strongSelf,success);
+                });
+            }
+            
+            //如果有错误 返回
+            if (!success){
+                *rollback = YES;
+                return;
+            }
+        }];
+    });
 }
 
 - (void)fl_isExitTable:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
@@ -318,23 +359,25 @@
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
     //把任务包装到事务里
-    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-        __weak typeof(self) strongSelf = weakSelf;
-        
-        success = [strongSelf fl_isExit:db table:modelClass autoCloseDB:autoCloseDB];
-        //strongSelf.db = db;
-        // 回调回去
-        if (complete) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                complete(strongSelf,success);
-            });
-        }
-        //如果有错误 返回
-        if (!success){
-            *rollback = YES;
-            return;
-        }
-    }];
+    FLDISPATCH_ASYNC_GLOBAL(^{
+        [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
+            __weak typeof(self) strongSelf = weakSelf;
+            
+            success = [strongSelf fl_isExit:db table:modelClass autoCloseDB:autoCloseDB];
+            //strongSelf.db = db;
+            // 回调回去
+            if (complete) {
+                FLDISPATCH_ASYNC_MAIN(^{
+                    complete(strongSelf,success);
+                });
+            }
+            //如果有错误 返回
+            if (!success){
+                *rollback = YES;
+                return;
+            }
+        }];
+    });
 }
 
 - (BOOL)fl_isExit:(FMDatabase *)db table:(Class)modelClass autoCloseDB:(BOOL)autoCloseDB{
@@ -369,6 +412,7 @@
 }
 
 
+
 /**
  *  @author gitKong
  *
@@ -378,25 +422,27 @@
     
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
-    //把任务包装到事务里
-    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-        __weak typeof(self) strongSelf = weakSelf;
-//        NSLog(@"%@",[NSThread currentThread]);
-        success = [strongSelf fl_create:db table:modelClass autoCloseDB:autoCloseDB];
-        //strongSelf.db = db;
-        // 回调
-        if (complete) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                complete(strongSelf,success);
-            });
-        }
-        
-        //如果有错误 返回
-        if (!success){
-            *rollback = YES;
-            return;
-        }
-    }];
+    
+    FLDISPATCH_ASYNC_GLOBAL(^{
+        //把任务包装到事务里
+        [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
+            __weak typeof(self) strongSelf = weakSelf;
+            success = [strongSelf fl_create:db table:modelClass autoCloseDB:autoCloseDB];
+            // 回调
+            if (complete) {
+                FLDISPATCH_ASYNC_MAIN(^{
+                    complete(strongSelf,success);
+                });
+            }
+            
+            //如果有错误 返回
+            if (!success){
+                *rollback = YES;
+                return;
+            }
+        }];
+    });
+    
 }
 
 - (BOOL)fl_create:(FMDatabase *)db table:(Class)modelClass autoCloseDB:(BOOL)autoCloseDB{
@@ -427,30 +473,56 @@
  *
  *  插入数据
  */
-- (void)fl_insertModel:(id)model autoCloseDB:(BOOL)autoCloseDB complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
+- (void)fl_insertSingleModel:(id)model inAsync:(BOOL)inAsync autoCloseDB:(BOOL)autoCloseDB complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
-    //把任务包装到事务里
-    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-        __weak typeof(self) strongSelf = weakSelf;
-        
-        success = [strongSelf fl_insert:db model:model autoCloseDB:autoCloseDB];
-        //strongSelf.db = db;
-        if (complete) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                complete(strongSelf,success);
-            });
-        }
-        //如果有错误 返回
-        if (!success){
-            *rollback = YES;
-            return;
-        }
-    }];
+    if (inAsync) {
+        FLDISPATCH_ASYNC_GLOBAL(^{
+            //把任务包装到事务里
+            [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
+                __weak typeof(self) strongSelf = weakSelf;
+                
+                success = [strongSelf fl_insert:db model:model autoCloseDB:autoCloseDB];
+                //strongSelf.db = db;
+                
+                if (complete) {
+                    FLDISPATCH_ASYNC_MAIN(^{
+                        complete(strongSelf,success);
+                    });
+                }
+                //如果有错误 返回
+                if (!success){
+                    *rollback = YES;
+                    return;
+                }
+            }];
+        });
+    }
+    else{
+        //把任务包装到事务里
+        [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
+            __weak typeof(self) strongSelf = weakSelf;
+            
+            success = [strongSelf fl_insert:db model:model autoCloseDB:autoCloseDB];
+            //strongSelf.db = db;
+            
+            if (complete) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    complete(strongSelf,success);
+                });
+            }
+            //如果有错误 返回
+            if (!success){
+                *rollback = YES;
+                return;
+            }
+        }];
+    }
+    
 }
 
 
-- (void)fl_insertModelArr:(NSArray *)modelArr complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
+- (void)fl_insertModelArr:(NSArray *)modelArr autoCloseDB:(BOOL)autoCloseDB complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
     // 使用此方法会导致查询不到数据，但插入是成功的，原因不明,待解决
     //    __block BOOL success = true;
     //    __weak typeof(self) weakSelf = self;
@@ -470,31 +542,24 @@
     //        }
     //    }];
     
-    for (NSInteger index = 0; index < modelArr.count; index ++) {
-        id model = modelArr[index];
-        
-        NSLog(@"index = %zd",index);
-        if (index == modelArr.count - 1) {
-            NSLog(@"index ---------");
-            __weak typeof(self) weakSelf = self;
-            [self fl_insertModel:model autoCloseDB:NO complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-                
-                __strong typeof(weakSelf) strongSelf = weakSelf;
-//                [strongSelf fl_closeDB:manager.db];
-                
-                if (complete) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        complete(strongSelf,flag);
-                    });
-                }
-            }];
-            return;
+    __weak typeof(self) weakSelf = self;
+    FLDISPATCH_ASYNC_GLOBAL(^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        for (NSInteger index = 0; index < modelArr.count; index ++) {
+            id model = modelArr[index];
+            if (index == modelArr.count - 1) {
+                [strongSelf fl_insertSingleModel:model inAsync:NO autoCloseDB:autoCloseDB complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+                    if (complete) {
+                        FLDISPATCH_ASYNC_MAIN(^{
+                            complete(strongSelf,flag);
+                        });
+                    }
+                }];
+                return;
+            }
+            [strongSelf fl_insertSingleModel:model inAsync:NO autoCloseDB:autoCloseDB complete:nil];
         }
-        
-        // 处理过程中不关闭数据库
-        [self fl_insertModel:model autoCloseDB:NO complete:nil];
-        
-    }
+    });
 }
 
 
@@ -577,6 +642,9 @@
         }
     }
     else{
+        if (autoCloseDB) {
+            [self fl_closeDB:db];
+        }
         return NO;
     }
 }
@@ -591,23 +659,23 @@
     __block BOOL success = true;
     __weak typeof(self) weakSelf = self;
     //把任务包装到事务里
-    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-        __weak typeof(self) strongSelf = weakSelf;
-        //strongSelf.db = db;
-        
-        // 回调
-        if (complete) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                complete(strongSelf,[strongSelf fl_search:db model:modelClass byID:FLDBID autoCloseDB:autoCloseDB]);
-            });
-        }
-        
-        //如果有错误 返回
-        if (!success){
-            *rollback = YES;
-            return;
-        }
-    }];
+    FLDISPATCH_ASYNC_GLOBAL(^{
+        [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
+            __weak typeof(self) strongSelf = weakSelf;
+            // 回调
+            if (complete) {
+                FLDISPATCH_ASYNC_MAIN(^{
+                    complete(strongSelf,[strongSelf fl_search:db model:modelClass byID:FLDBID autoCloseDB:autoCloseDB]);
+                });
+            }
+            
+            //如果有错误 返回
+            if (!success){
+                *rollback = YES;
+                return;
+            }
+        }];
+    });
 }
 
 
@@ -662,10 +730,13 @@
     
 }
 
-- (NSArray *)fl_search:(FMDatabase *)db modelArr:(Class)modelClass{
+- (NSArray *)fl_search:(FMDatabase *)db modelArr:(Class)modelClass autoCloseDB:(BOOL)autoCloseDB{
     if ([db open]) {
         BOOL success = [self fl_isExit:db table:modelClass autoCloseDB:NO];
         if (!success) {
+            if (autoCloseDB) {
+                [self fl_closeDB:db];
+            }
             return nil;
         }
         // 查询数据
@@ -705,7 +776,9 @@
             // 添加
             [modelArrM addObject:object];
         }
-        [self fl_closeDB:db];
+        if (autoCloseDB) {
+            [self fl_closeDB:db];
+        }
         return modelArrM.copy;
     }
     else{
@@ -714,52 +787,15 @@
 }
 
 
-/**
- *  @author gitKong
- *
- *  修改
- */
-- (void)fl_modifyModel:(id)model byID:(NSString *)FLDBID autoCloseDB:(BOOL)autoCloseDB complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete{
-    __block BOOL success = true;
-    __weak typeof(self) weakSelf = self;
-    //把任务包装到事务里
-    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-        __weak typeof(self) strongSelf = weakSelf;
-        success = [db open];
-        if (success) {
-            //strongSelf.db = db;
-            // 回调
-            if (complete) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    complete(strongSelf,[strongSelf fl_modify:db model:model byID:FLDBID autoCloseDB:autoCloseDB]);
-                });
-            }
-        }
-        else{
-            // 回调
-            if (complete) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    complete(strongSelf,NO);
-                });
-            }
-        }
-        //如果有错误 返回
-        if (!success){
-            *rollback = YES;
-            return;
-        }
-    }];
-}
 
 - (BOOL)fl_modify:(FMDatabase *)db model:(id)model byID:(NSString *)FLDBID autoCloseDB:(BOOL)autoCloseDB{
     if ([db open]) {
         // 判断是否已经存在
         BOOL success = [self fl_isExit:db table:[model class] autoCloseDB:NO];
         if (!success) {
-            return NO;
-        }
-        success = [self fl_isExit:db table:[model class] autoCloseDB:NO];
-        if (!success) {
+            if (autoCloseDB) {
+                [self fl_closeDB:db];
+            }
             return NO;
         }
         // 修改数据@"UPDATE t_student SET name = 'liwx' WHERE age > 12 AND age < 15;"
@@ -790,6 +826,9 @@
         return success;
     }
     else{
+        if (autoCloseDB) {
+            [self fl_closeDB:db];
+        }
         return NO;
     }
 }
@@ -799,7 +838,7 @@
  *
  *  删除
  */
-- (BOOL)fl_drop:(FMDatabase *)db table:(Class)modelClass{
+- (BOOL)fl_drop:(FMDatabase *)db table:(Class)modelClass autoCloseDB:(BOOL)autoCloseDB{
     if ([db open]) {
         // 此时如果添加判断，那么下面的删除表就会执行失败，原因不明
 //        BOOL success = [self fl_isExit:db table:modelClass autoCloseDB:NO];
@@ -809,19 +848,27 @@
         // 删
         NSMutableString *sql = [NSMutableString stringWithFormat:@"DROP TABLE %@;",modelClass];
         BOOL success = [db executeUpdate:sql];
-        [self fl_closeDB:db];
+        if (autoCloseDB) {
+            [self fl_closeDB:db];
+        }
         return success;
     }
     else{
+        if (autoCloseDB) {
+            [self fl_closeDB:db];
+        }
         return NO;
     }
 }
 
-- (BOOL)fl_delete:(FMDatabase *)db model:(Class)modelClass byId:(NSString *)FLDBID{
+- (BOOL)fl_delete:(FMDatabase *)db model:(Class)modelClass byId:(NSString *)FLDBID autoCloseDB:(BOOL)autoCloseDB {
     if ([db open]) {
         // 删除数据
         BOOL success = [self fl_isExit:db table:modelClass autoCloseDB:NO];
         if (!success) {
+            if (autoCloseDB) {
+                [self fl_closeDB:db];
+            }
             return NO;
         }
         // 判断是否存在
@@ -832,24 +879,31 @@
         else{
             success = NO;
         }
-        [self fl_closeDB:db];
+        if (autoCloseDB) {
+            [self fl_closeDB:db];
+        }
         return success;
     }
     else{
+        if (autoCloseDB) {
+            [self fl_closeDB:db];
+        }
         return NO;
     }
 }
 
-- (BOOL)fl_delete:(FMDatabase *)db allModel:(Class)modelClass{
+- (BOOL)fl_delete:(FMDatabase *)db allModel:(Class)modelClass autoCloseDB:(BOOL)autoCloseDB{
     if ([db open]) {
         // 删除数据
-//        FL_ISEXITTABLE(db,modelClass);
         BOOL success = [self fl_isExit:db table:modelClass autoCloseDB:NO];
         if (!success) {
+            if (autoCloseDB) {
+                [self fl_closeDB:db];
+            }
             return NO;
         }
         // 数据是否存在
-        NSArray *modelArr = [self fl_search:db modelArr:modelClass];
+        NSArray *modelArr = [self fl_search:db modelArr:modelClass autoCloseDB:NO];
         if (modelArr && modelArr.count) {
             NSMutableString *sql = [NSMutableString stringWithFormat:@"DELETE FROM %@;",modelClass];
             success = [db executeUpdate:sql];
@@ -857,10 +911,15 @@
         else{
             success = NO;
         }
-        [self fl_closeDB:db];
+        if (autoCloseDB) {
+            [self fl_closeDB:db];
+        }
         return success;
     }
     else{
+        if (autoCloseDB) {
+            [self fl_closeDB:db];
+        }
         return NO;
     }
 }
@@ -871,17 +930,17 @@
     /**
      *  @author gitKong
      *
-     *  不能主动关闭数据库
+     *  处理完需要主动关闭数据库,不然多线程处理会出现文件读写操作异常，如果不关闭数据库，支持嵌套，官方不建议嵌套使用;作者处理了，可以使用嵌套
      */
-//    [db close];
+    [db close];
 }
 
-
-#pragma mark -- Setter & Getter
-- (NSMutableDictionary *)queueDictM{
-    if (_queueDictM == nil) {
-        _queueDictM = [NSMutableDictionary dictionary];
-    }
-    return _queueDictM;
+void FLDISPATCH_ASYNC_GLOBAL(void(^block)()){
+    dispatch_async(dispatch_get_global_queue(0, 0), block);
 }
+
+void FLDISPATCH_ASYNC_MAIN(void(^block)()){
+    dispatch_async(dispatch_get_main_queue(), block);
+}
+
 @end

@@ -26,33 +26,44 @@
 @implementation FLFMDBManager
 
 + (instancetype)shareManager:(NSString *)fl_dbName{
-    static FLFMDBManager *instance;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        instance = [[self alloc] init];
-    });
+    
     // 1、获取沙盒中数据库的路径
     NSString *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
-    
+    NSString *tempDBName = nil;
     if (fl_dbName && ![fl_dbName isEqualToString:@""]) {
-        instance.dbName = fl_dbName;
+        tempDBName = fl_dbName;
     }
     else{
-        instance.dbName = FLDB_DEFAULT_NAME;
+        tempDBName = FLDB_DEFAULT_NAME;
     }
-    NSString *sqlFilePath = [path stringByAppendingPathComponent:[instance.dbName stringByAppendingString:@".sqlite"]];
+    
+    NSString *sqlFilePath = [path stringByAppendingPathComponent:[tempDBName stringByAppendingString:@".sqlite"]];
     
     // 2、判断 caches 文件夹是否存在.不存在则创建
     NSFileManager *manager = [NSFileManager defaultManager];
     BOOL isDirectory = YES;
     BOOL tag = [manager fileExistsAtPath:sqlFilePath isDirectory:&isDirectory];
     
+    
+    static FLFMDBManager *instance;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[self alloc] init];
+        if (tag) {
+            FMDatabase *dataBase = [FMDatabase databaseWithPath:sqlFilePath];
+            [instance.dataBaseDictM setValue:dataBase forKey:tempDBName];
+        }
+    });
+    
     if (!tag) {
         [manager createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:NULL];
         // 通过路径创建数据库
         FMDatabase *dataBase = [FMDatabase databaseWithPath:sqlFilePath];
-        [instance.dataBaseDictM setValue:dataBase forKey:instance.dbName];
+        [instance.dataBaseDictM setValue:dataBase forKey:tempDBName];
     }
+    
+    instance.dbName = tempDBName;
+    
     return instance;
 }
 

@@ -35,6 +35,7 @@
  */
 - (void)fl_createTable:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 
+
 #pragma mark -- 插入
 
 /**
@@ -46,7 +47,6 @@
  */
 - (void)fl_insertModel:(id)model complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 
-
 #pragma mark -- 查询
 
 /**
@@ -55,21 +55,18 @@
  *  查询指定表是否存在
  */
 - (void)fl_isExitTable:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
-
 /**
  *  @author gitKong
  *
  *  查找指定表中指定DBID的模型
  */
 - (void)fl_searchModel:(Class)modelClass byID:(NSString *)FLDBID complete:(void(^)(FLFMDBQueueManager *manager,id model))complete;
-
 /**
  *  @author gitKong
  *
  *  查找指定表中模型数组（所有的）
  */
 - (void)fl_searchModelArr:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager,NSArray *modelArr))complete;
-
 
 #pragma mark -- 修改
 
@@ -89,7 +86,6 @@
  *  删除指定表
  */
 - (void)fl_dropTable:(Class)modelClass complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
-
 /**
  *  @author gitKong
  *
@@ -109,5 +105,4 @@
  *  删除指定表中指定DBID的模型
  */
 - (void)fl_deleteModel:(Class)modelClass byId:(NSString *)FLDBID complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
-
 @end

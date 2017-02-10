@@ -22,7 +22,7 @@
 
 - (void)writeDbOne{
     NSMutableArray *arrM = [NSMutableArray array];
-    for (NSInteger index = 0; index < 500; index ++) {
+    for (NSInteger index = 0; index < 5000; index ++) {
         
         FLStudentModel *model = [[FLStudentModel alloc] init];
         model.name_gitKong = @"clarence";
@@ -31,7 +31,7 @@
         model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24};
         model.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"90",@"80", nil];
         [arrM addObject:model];
-        _index = index + 1;
+//        _index = index + 1;
         
         /**
          *  @author gitKong
@@ -67,7 +67,7 @@
 
 - (void)writeDbTwo{
     NSMutableArray *arrM = [NSMutableArray array];
-    for (NSInteger index = 500; index < 1000; index ++) {
+    for (NSInteger index = 5000; index < 10000; index ++) {
         
         FLStudentModel *model = [[FLStudentModel alloc] init];
         model.name_gitKong = @"clarence";
@@ -76,7 +76,7 @@
         model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24};
         model.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"90",@"80", nil];
         [arrM addObject:model];
-        _index = index + 1;
+//        _index = index + 1;
         
 //        BOOL success = [FLFMDBMANAGER fl_insertModel:model];
 //        if (success) {
@@ -112,9 +112,13 @@
     // Do any additional setup after loading the view, typically from a nib.
     
     
-    
+    /**
+     *  @author gitKong
+     *
+     *  全部操作默认开启子线程，回调会在主线程，解决多线程操作大量数据文件读写问题、以及嵌套使用问题
+     */
     NSMutableArray *arrM = [NSMutableArray array];
-    for (NSInteger index = 0; index < 20; index ++) {
+    for (NSInteger index = 0; index < 999999; index ++) {
         
         FLStudentModel *model = [[FLStudentModel alloc] init];
         model.name_gitKong = @"clarence";
@@ -123,38 +127,37 @@
         model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24};
         model.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"90",@"80", nil];
         [arrM addObject:model];
-        _index = index + 1;
     }
-    [FLFMDBQUEUEMANAGER fl_insertModel:arrM complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-        NSLog(@"%zd",flag);
+    
+    [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+        [FLFMDBQUEUEMANAGER fl_searchModelArr:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, NSArray *modelArr) {
+            NSLog(@"%@",modelArr);
+            [FLFMDBQUEUEMANAGER fl_insertModel:arrM complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+                NSLog(@"%zd",flag);
+                [FLFMDBQUEUEMANAGER fl_searchModelArr:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, NSArray *modelArr) {
+                    NSLog(@"%@",modelArr);
+                    [self deleteTable:nil];
+                }];
+            }];
+        }];
     }];
     
-    FLFMDBQUEUEMANAGERX(@"dd");
     
+    /**
+     *  @author gitKong
+     *
+     *  支持多个数据库
+     */
+    FLFMDBQUEUEMANAGERX(@"dd");
+
     [FLFMDBQUEUEMANAGERX(@"dd") fl_dropDB];
     
-//    FLStudentModel *model = [[FLStudentModel alloc] init];
-//    model.name_gitKong = @"gitKong";
-//    model.age = 24;
-//    model.FLDBID = [NSString stringWithFormat:@"gitKong_%zd",_index ++];
-//    model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24,@"sex" : @"male"};
-//    model.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"99",@"97", nil];
-//    [FLFMDBMANAGER fl_insertModel:model];
-//    
-//    
-//    FLStudentModel *model1 = [[FLStudentModel alloc] init];
-//    model1.name_gitKong = @"clarence";
-//    model1.age = 24;
-//    model1.FLDBID = [NSString stringWithFormat:@"gitKong_%zd",_index ++];
-//    model1.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24,@"sex" : @"male"};
-//    model1.scroceArrM = [NSMutableArray arrayWithObjects:@"100",@"99",@"97", nil];
-//    [FLFMDBMANAGER fl_insertModel:model1];
-//    
-//    
-//    BOOL flag = [FLFMDBMANAGER fl_deleteModel:[FLStudentModel class] byId:@"xxx"];
-//    NSLog(@"flag = %zd",flag);
     
-    // 多线程测试
+    /**
+     *  @author gitKong
+     *
+     *  多线程测试
+     */
 //    [NSThread detachNewThreadSelector:@selector(writeDbOne) toTarget:self withObject:nil];
 //    
 //    [NSThread detachNewThreadSelector:@selector(readDb) toTarget:self withObject:nil];
@@ -162,30 +165,11 @@
 //    [NSThread detachNewThreadSelector:@selector(writeDbTwo) toTarget:self withObject:nil];
     
     
-    
-    
-//    [FLFMDBQUEUEMANAGER fl_isExitTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-//        NSLog(@"flag = %zd",flag);
-//        [FLFMDBQUEUEMANAGER fl_insertModel:model complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-//            NSLog(@"flag = %zd",flag);
-//            [FLFMDBQUEUEMANAGER fl_isExitTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-//                NSLog(@"flag = %zd",flag);
-//            }];
-//        }];
-//    }];
-    
-//    [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-//        if (flag) {
-//            [FLFMDBQUEUEMANAGER fl_insertModel:model complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-//                NSLog(@"flag = %zd",flag);
-//                
-//            }];
-//        }
-//    }];
-    
-    
-    
-    // 解决死锁问题
+    /**
+     *  @author gitKong
+     *
+     *  解决死锁问题
+     */
     /*
     [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
         if (flag) {
