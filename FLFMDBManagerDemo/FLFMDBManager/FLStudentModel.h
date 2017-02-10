@@ -33,10 +33,10 @@
  *  嵌套模型，多表处理
  */
 @property (nonatomic,copy)NSString *penModelID;// 标记 FLPenModel 嵌套模型
-@property (nonatomic,strong)FLPenModel *penModel;
-
+//@property (nonatomic,strong)FLPenModel *penModel;
+//
 @property (nonatomic,copy)NSString *bookModelID;// 标记 FLBookModel 嵌套模型
-@property (nonatomic,strong)FLBookModel *bookModel;
+//@property (nonatomic,strong)FLBookModel *bookModel;
 
 //@property (nonatomic,copy)NSString *id;
 

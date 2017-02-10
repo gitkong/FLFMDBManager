@@ -24,10 +24,10 @@
 
 - (void)writeDbOne{
     NSMutableArray *arrM = [NSMutableArray array];
-    for (NSInteger index = 0; index < 5000; index ++) {
+    for (NSInteger index = 0; index < 300; index ++) {
         
         FLStudentModel *model = [[FLStudentModel alloc] init];
-        model.name_gitKong = @"clarence";
+//        model.name_gitKong = @"clarence";
         model.age = 24;
         model.FLDBID = [NSString stringWithFormat:@"clarence_%zd",index];
         model.msgInfo = @{@"name" : @"gitKong" ,@"age" : @24};
@@ -69,7 +69,7 @@
 
 - (void)writeDbTwo{
     NSMutableArray *arrM = [NSMutableArray array];
-    for (NSInteger index = 5000; index < 10000; index ++) {
+    for (NSInteger index = 300; index < 500; index ++) {
         
         FLStudentModel *model = [[FLStudentModel alloc] init];
         model.name_gitKong = @"clarence";
@@ -211,41 +211,40 @@
     
 //    [FLFMDBQUEUEMANAGER fl_createTable:[FLPenModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
 //        if (flag) {
-//            [FLFMDBQUEUEMANAGER fl_insertModel:penModel complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-//                if (flag) {
-//                    NSLog(@"insert penModel successfully");
-//                    
-//                }
-//            }];
+            [FLFMDBQUEUEMANAGER fl_insertModel:penModel complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+                if (flag) {
+                    NSLog(@"insert penModel successfully");
+                    
+                }
+            }];
 //        }
 //    }];
-//    
+    
 //    [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
 //        if (flag) {
-//            [FLFMDBQUEUEMANAGER fl_insertModel:studentModel complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-//                if (flag) {
-//                    NSLog(@"insert studentModel successfully");
-//                    
-//                }
-//            }];
+            [FLFMDBQUEUEMANAGER fl_insertModel:studentModel complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+                if (flag) {
+                    NSLog(@"insert studentModel successfully");
+                    
+                }
+            }];
 //        }
 //    }];
     
     
     
-    BOOL success = NO;
-
-    success = [FLFMDBMANAGERX(@"clarence") fl_insertModel:studentModel];
-    if (success) {
-        success = [FLFMDBMANAGERX(@"clarence") fl_insertModel:penModel];
-        if (success) {
-            FLStudentModel *studentModel = [FLFMDBMANAGERX(@"clarence") fl_searchModel:[FLStudentModel class] byID:@"0"];
-            if (studentModel.penModelID) {
-                FLPenModel *penModel = [FLFMDBMANAGERX(@"clarence") fl_searchModel:[FLPenModel class] byID:studentModel.penModelID];
-                [self showTip:penModel.name];
-            }
-        }
-    }
+//    BOOL success = NO;
+//    success = [FLFMDBMANAGERX(@"clarence") fl_insertModel:studentModel];
+//    if (success) {
+//        success = [FLFMDBMANAGERX(@"clarence") fl_insertModel:penModel];
+//        if (success) {
+//            FLStudentModel *studentModel = [FLFMDBMANAGERX(@"clarence") fl_searchModel:[FLStudentModel class] byID:@"0"];
+//            if (studentModel.penModelID) {
+//                FLPenModel *penModel = [FLFMDBMANAGERX(@"clarence") fl_searchModel:[FLPenModel class] byID:studentModel.penModelID];
+//                [self showTip:penModel.name];
+//            }
+//        }
+//    }
     
     
     
@@ -277,6 +276,11 @@
 //    [weakSelf showTip:penModel.name];
     
     
+    /**
+     *  @author gitKong
+     *
+     *  查询所有信息
+     */
 //    [FLFMDBQUEUEMANAGER fl_searchModelArr:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, NSArray *modelArr) {
 //        __weak typeof(self) strongSelf = weakSelf;
 //        dispatch_async(dispatch_get_main_queue(), ^{

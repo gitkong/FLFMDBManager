@@ -42,8 +42,7 @@
  *  @author gitKong
  *
  *  @param model 插入单个模型或者模型数组,如果此时传入的模型对应的FLDBID在表中已经存在，则替换更新旧的
- *  如果没创建表就自动先创建，表名为模型类名
- *
+ *  注意：如果此时没创建表就自动先创建，表名为模型类名
  */
 - (void)fl_insertModel:(id)model complete:(void(^)(FLFMDBQueueManager *manager, BOOL flag))complete;
 

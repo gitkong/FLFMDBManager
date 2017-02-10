@@ -333,15 +333,23 @@
         }
         
         id value = [model valueForKey:key];
+        /**
+         *  @author gitKong
+         *
+         *  防止属性没赋值
+         */
+        if (value == [NSNull null]) {
+            value = @"";
+        }
         if ([value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableDictionary class]] || [value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSMutableArray class]]) {
             value = [NSString stringWithFormat:@"%@",value];
         }
         if (i == 0) {
             // sql 语句中字符串需要单引号或者双引号括起来
-            [sqlValueM appendFormat:@"%@",[value isKindOfClass:[NSString class]] ? [NSString stringWithFormat:@"'%@'",value] : value];
+            [sqlValueM appendFormat:@"%@",[value isKindOfClass:[NSString class]] ? [NSString stringWithFormat:@"'%@'",value ? value : @""] : value ? value : 0];
         }
         else{
-            [sqlValueM appendFormat:@", %@",[value isKindOfClass:[NSString class]] ? [NSString stringWithFormat:@"'%@'",value] : value];
+            [sqlValueM appendFormat:@", %@",[value isKindOfClass:[NSString class]] ? [NSString stringWithFormat:@"'%@'",value ? value : @""] : value ? value : 0];
         }
     }
     //    [sqlValueM appendFormat:@" WHERE FLDBID = '%@'",[model valueForKey:@"FLDBID"]];
@@ -464,6 +472,10 @@
         }
     }
     else{
+        // 关闭数据库
+        if (autoCloseDB) {
+            [self fl_closeDB:db];
+        }
         return NO;
     }
 }
@@ -481,7 +493,6 @@
             //把任务包装到事务里
             [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
                 __weak typeof(self) strongSelf = weakSelf;
-                
                 success = [strongSelf fl_insert:db model:model autoCloseDB:autoCloseDB];
                 if (complete) {
                     FLDISPATCH_ASYNC_MAIN(^{
@@ -502,10 +513,8 @@
             __weak typeof(self) strongSelf = weakSelf;
             
             success = [strongSelf fl_insert:db model:model autoCloseDB:autoCloseDB];
-            //strongSelf.db = db;
-            
             if (complete) {
-                dispatch_async(dispatch_get_main_queue(), ^{
+                FLDISPATCH_ASYNC_MAIN(^{
                     complete(strongSelf,success);
                 });
             }
@@ -584,10 +593,11 @@
         // 没有表的时候，先创建再插入
         
         // 此时有三步操作，第一步处理完不关闭数据库
-        
-        if (![self fl_isExit:db table:[model class] autoCloseDB:YES]) {
+        NSLog(@"-----------------%@",[NSThread currentThread]);
+        if (![self fl_isExit:db table:[model class] autoCloseDB:NO]) {
             // 第二步处理完不关闭数据库
-            BOOL success = [self fl_create:db table:[model class] autoCloseDB:YES];
+            BOOL success = [self fl_create:db table:[model class] autoCloseDB:NO];
+            
             if (success) {
                 NSString *fl_dbid = [model valueForKey:@"FLDBID"];
                 id judgeModle = [self fl_search:db model:model byID:fl_dbid autoCloseDB:YES];
@@ -600,7 +610,18 @@
                     return updataSuccess;
                 }
                 else{
-                    BOOL insertSuccess = [db executeUpdate:[self createInsertSQL:model]];
+                    /**
+                     *  @author gitKong
+                     *
+                     *  此时运行到这里，数据库的对应表格提示没有，暂时不明白，因此在这仔重新创建一次，确保表格存在
+                     */
+                    BOOL insertSuccess = YES;
+                    insertSuccess = [self fl_create:db table:[model class] autoCloseDB:NO];
+                    insertSuccess = [db open];
+                    if (insertSuccess) {
+                        insertSuccess = [db executeUpdate:[self createInsertSQL:model]];
+                    }
+                    
                     // 最后一步操作完毕，询问是否需要关闭
                     if (autoCloseDB) {
                         [self fl_closeDB:db];
@@ -620,6 +641,9 @@
         // 已经创建有对应的表，直接插入
         else{
             NSString *fl_dbid = [model valueForKey:@"FLDBID"];
+//            if ([db open]) {
+//                NSLog(@"---");
+//            }
             id judgeModle = [self fl_search:db model:model byID:fl_dbid autoCloseDB:NO];
             
             if ([[judgeModle valueForKey:@"FLDBID"] isEqualToString:fl_dbid]) {
@@ -706,6 +730,7 @@
                 
                 id value = [rs objectForColumnName:key];
                 if ([value isKindOfClass:[NSString class]]) {
+                    
                     NSData *data = [value dataUsingEncoding:NSUTF8StringEncoding];
                     id result = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
                     if ([result isKindOfClass:[NSDictionary class]] || [result isKindOfClass:[NSMutableDictionary class]] || [result isKindOfClass:[NSArray class]] || [result isKindOfClass:[NSMutableArray class]]) {
@@ -818,15 +843,34 @@
             }
             id value = [model valueForKey:key];
             if (i == 0) {
-                [sql appendFormat:@"%@ = %@",key,([value isKindOfClass:[NSString class]] || [value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableDictionary class]] || [value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSMutableArray class]]) ? [NSString stringWithFormat:@"'%@'",value] : value];
+                /**
+                 *  @author gitKong
+                 *
+                 *  防止属性没赋值
+                 */
+                if (value == [NSNull null]) {
+                    value = @"";
+                }
+                [sql appendFormat:@"%@ = %@",key,([value isKindOfClass:[NSString class]] || [value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableDictionary class]] || [value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSMutableArray class]]) ? [NSString stringWithFormat:@"'%@'",(value ? value : @"")] : value ? value : 0];
             }
             else{
-                [sql appendFormat:@",%@ = %@",key,([value isKindOfClass:[NSString class]] || [value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableDictionary class]] || [value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSMutableArray class]]) ? [NSString stringWithFormat:@"'%@'",value] : value];
+                /**
+                 *  @author gitKong
+                 *
+                 *  防止属性没赋值
+                 */
+                if (value == [NSNull null]) {
+                    value = @"";
+                }
+                [sql appendFormat:@",%@ = %@",key,([value isKindOfClass:[NSString class]] || [value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableDictionary class]] || [value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSMutableArray class]]) ? [NSString stringWithFormat:@"'%@'",(value ? value : @"")] : value ? value : 0];
             }
         }
         
         [sql appendFormat:@" WHERE FLDBID = '%@';",FLDBID];
-        success = [db executeUpdate:sql];
+        if ([db open]) {
+            success = [db executeUpdate:sql];
+        }
+        
         if (autoCloseDB) {
             [self fl_closeDB:db];
         }
@@ -943,8 +987,8 @@
 }
 
 void FLDISPATCH_ASYNC_GLOBAL(void(^block)()){
-//    dispatch_async(dispatch_get_global_queue(0, 0), block);
-    block();
+    dispatch_async(dispatch_get_global_queue(0, 0), block);
+//    block();
 }
 
 void FLDISPATCH_ASYNC_MAIN(void(^block)()){
