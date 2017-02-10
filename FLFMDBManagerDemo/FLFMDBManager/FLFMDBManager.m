@@ -49,6 +49,7 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         instance = [[self alloc] init];
+        instance.dataBaseDictM = [NSMutableDictionary dictionary];
         if (tag) {
             FMDatabase *dataBase = [FMDatabase databaseWithPath:sqlFilePath];
             [instance.dataBaseDictM setValue:dataBase forKey:tempDBName];
@@ -436,7 +437,12 @@
 - (id)fl_searchModel:(Class)modelClass byID:(NSString *)FLDBID autoCloseDB:(BOOL)autoCloseDB{
     if ([FLCURRENTDB open]) {
 //        FL_ISEXITTABLE(modelClass);
-        if(![self isExitTable:modelClass autoCloseDB:NO])return nil;
+        if(![self isExitTable:modelClass autoCloseDB:NO]){
+            if (autoCloseDB) {
+                [FLCURRENTDB close];
+            }
+            return nil;
+        }
         // 查询数据
         FMResultSet *rs = [FLCURRENTDB executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@ WHERE FLDBID = '%@';",modelClass,FLDBID]];
         // 创建对象
@@ -476,6 +482,9 @@
         return object;
     }
     else{
+        if (autoCloseDB) {
+            [FLCURRENTDB close];
+        }
         return nil;
     }
     
@@ -484,7 +493,12 @@
 - (BOOL)fl_modifyModel:(id)model byID:(NSString *)FLDBID autoCloseDB:(BOOL)autoCloseDB{
     if ([FLCURRENTDB open]) {
 //        FL_ISEXITTABLE([model class]);
-        if(![self isExitTable:[model class] autoCloseDB:NO])return NO;
+        if(![self isExitTable:[model class] autoCloseDB:NO]){
+            if (autoCloseDB) {
+                [FLCURRENTDB close];
+            }
+            return NO;
+        }
         // 修改数据@"UPDATE t_student SET name = 'liwx' WHERE age > 12 AND age < 15;"
         NSMutableString *sql = [NSMutableString stringWithFormat:@"UPDATE %@ SET ",[model class]];
         unsigned int outCount;
@@ -513,17 +527,20 @@
         return success;
     }
     else{
+        if (autoCloseDB) {
+            [FLCURRENTDB close];
+        }
         return NO;
     }
     
 }
 
 #pragma mark -- Setter & Getter
-- (NSMutableDictionary *)dataBaseDictM{
-    if (_dataBaseDictM == nil) {
-        _dataBaseDictM = [NSMutableDictionary dictionary];
-    }
-    return _dataBaseDictM;
-}
+//- (NSMutableDictionary *)dataBaseDictM{
+//    if (_dataBaseDictM == nil) {
+//        _dataBaseDictM = [NSMutableDictionary dictionary];
+//    }
+//    return _dataBaseDictM;
+//}
 
 @end

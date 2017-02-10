@@ -26,33 +26,45 @@
 @implementation FLFMDBManager
 
 + (instancetype)shareManager:(NSString *)fl_dbName{
-    static FLFMDBManager *instance;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        instance = [[self alloc] init];
-    });
+    
     // 1、获取沙盒中数据库的路径
     NSString *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
-    
+    NSString *tempDBName = nil;
     if (fl_dbName && ![fl_dbName isEqualToString:@""]) {
-        instance.dbName = fl_dbName;
+        tempDBName = fl_dbName;
     }
     else{
-        instance.dbName = FLDB_DEFAULT_NAME;
+        tempDBName = FLDB_DEFAULT_NAME;
     }
-    NSString *sqlFilePath = [path stringByAppendingPathComponent:[instance.dbName stringByAppendingString:@".sqlite"]];
+    
+    NSString *sqlFilePath = [path stringByAppendingPathComponent:[tempDBName stringByAppendingString:@".sqlite"]];
     
     // 2、判断 caches 文件夹是否存在.不存在则创建
     NSFileManager *manager = [NSFileManager defaultManager];
     BOOL isDirectory = YES;
     BOOL tag = [manager fileExistsAtPath:sqlFilePath isDirectory:&isDirectory];
     
+    
+    static FLFMDBManager *instance;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[self alloc] init];
+        instance.dataBaseDictM = [NSMutableDictionary dictionary];
+        if (tag) {
+            FMDatabase *dataBase = [FMDatabase databaseWithPath:sqlFilePath];
+            [instance.dataBaseDictM setValue:dataBase forKey:tempDBName];
+        }
+    });
+    
     if (!tag) {
         [manager createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:NULL];
         // 通过路径创建数据库
         FMDatabase *dataBase = [FMDatabase databaseWithPath:sqlFilePath];
-        [instance.dataBaseDictM setValue:dataBase forKey:instance.dbName];
+        [instance.dataBaseDictM setValue:dataBase forKey:tempDBName];
     }
+    
+    instance.dbName = tempDBName;
+    
     return instance;
 }
 
@@ -425,7 +437,12 @@
 - (id)fl_searchModel:(Class)modelClass byID:(NSString *)FLDBID autoCloseDB:(BOOL)autoCloseDB{
     if ([FLCURRENTDB open]) {
 //        FL_ISEXITTABLE(modelClass);
-        if(![self isExitTable:modelClass autoCloseDB:NO])return nil;
+        if(![self isExitTable:modelClass autoCloseDB:NO]){
+            if (autoCloseDB) {
+                [FLCURRENTDB close];
+            }
+            return nil;
+        }
         // 查询数据
         FMResultSet *rs = [FLCURRENTDB executeQuery:[NSString stringWithFormat:@"SELECT * FROM %@ WHERE FLDBID = '%@';",modelClass,FLDBID]];
         // 创建对象
@@ -465,6 +482,9 @@
         return object;
     }
     else{
+        if (autoCloseDB) {
+            [FLCURRENTDB close];
+        }
         return nil;
     }
     
@@ -473,7 +493,12 @@
 - (BOOL)fl_modifyModel:(id)model byID:(NSString *)FLDBID autoCloseDB:(BOOL)autoCloseDB{
     if ([FLCURRENTDB open]) {
 //        FL_ISEXITTABLE([model class]);
-        if(![self isExitTable:[model class] autoCloseDB:NO])return NO;
+        if(![self isExitTable:[model class] autoCloseDB:NO]){
+            if (autoCloseDB) {
+                [FLCURRENTDB close];
+            }
+            return NO;
+        }
         // 修改数据@"UPDATE t_student SET name = 'liwx' WHERE age > 12 AND age < 15;"
         NSMutableString *sql = [NSMutableString stringWithFormat:@"UPDATE %@ SET ",[model class]];
         unsigned int outCount;
@@ -502,17 +527,20 @@
         return success;
     }
     else{
+        if (autoCloseDB) {
+            [FLCURRENTDB close];
+        }
         return NO;
     }
     
 }
 
 #pragma mark -- Setter & Getter
-- (NSMutableDictionary *)dataBaseDictM{
-    if (_dataBaseDictM == nil) {
-        _dataBaseDictM = [NSMutableDictionary dictionary];
-    }
-    return _dataBaseDictM;
-}
+//- (NSMutableDictionary *)dataBaseDictM{
+//    if (_dataBaseDictM == nil) {
+//        _dataBaseDictM = [NSMutableDictionary dictionary];
+//    }
+//    return _dataBaseDictM;
+//}
 
 @end

@@ -483,8 +483,6 @@
                 __weak typeof(self) strongSelf = weakSelf;
                 
                 success = [strongSelf fl_insert:db model:model autoCloseDB:autoCloseDB];
-                //strongSelf.db = db;
-                
                 if (complete) {
                     FLDISPATCH_ASYNC_MAIN(^{
                         complete(strongSelf,success);
@@ -587,12 +585,12 @@
         
         // 此时有三步操作，第一步处理完不关闭数据库
         
-        if (![self fl_isExit:db table:[model class] autoCloseDB:NO]) {
+        if (![self fl_isExit:db table:[model class] autoCloseDB:YES]) {
             // 第二步处理完不关闭数据库
-            BOOL success = [self fl_create:db table:[model class] autoCloseDB:NO];
+            BOOL success = [self fl_create:db table:[model class] autoCloseDB:YES];
             if (success) {
                 NSString *fl_dbid = [model valueForKey:@"FLDBID"];
-                id judgeModle = [self fl_search:db model:model byID:fl_dbid autoCloseDB:NO];
+                id judgeModle = [self fl_search:db model:model byID:fl_dbid autoCloseDB:YES];
                 
                 if ([[judgeModle valueForKey:@"FLDBID"] isEqualToString:fl_dbid]) {
                     BOOL updataSuccess = [self fl_modify:db model:model byID:fl_dbid autoCloseDB:NO];
@@ -685,6 +683,9 @@
     if ([db open]) {
         BOOL success = [self fl_isExit:db table:modelClass autoCloseDB:NO];
         if (!success) {
+            if (autoCloseDB) {
+                [self fl_closeDB:db];
+            }
             return nil;
         }
         // 查询数据
@@ -725,6 +726,9 @@
         return object;
     }
     else{
+        if (autoCloseDB) {
+            [self fl_closeDB:db];
+        }
         return nil;
     }
     
@@ -782,6 +786,9 @@
         return modelArrM.copy;
     }
     else{
+        if (autoCloseDB) {
+            [self fl_closeDB:db];
+        }
         return nil;
     }
 }
@@ -936,7 +943,8 @@
 }
 
 void FLDISPATCH_ASYNC_GLOBAL(void(^block)()){
-    dispatch_async(dispatch_get_global_queue(0, 0), block);
+//    dispatch_async(dispatch_get_global_queue(0, 0), block);
+    block();
 }
 
 void FLDISPATCH_ASYNC_MAIN(void(^block)()){
