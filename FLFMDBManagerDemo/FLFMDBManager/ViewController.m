@@ -208,43 +208,53 @@
     // 记录嵌套模型的id
     studentModel.penModelID = penModel.FLDBID;
     studentModel.bookModelID = bookModel.FLDBID;
+
+    /**
+     *  @author gitKong
+     *
+     *  解决多表创建出现表格查询不到问题
+     */
+    [FLFMDBQUEUEMANAGER fl_insertModel:penModel complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+        if (flag) {
+            NSLog(@"insert penModel successfully");
+            
+        }
+    }];
+
+    [FLFMDBQUEUEMANAGER fl_insertModel:studentModel complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+        if (flag) {
+            NSLog(@"insert studentModel successfully");
+            
+        }
+    }];
     
-//    [FLFMDBQUEUEMANAGER fl_createTable:[FLPenModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-//        if (flag) {
-            [FLFMDBQUEUEMANAGER fl_insertModel:penModel complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-                if (flag) {
-                    NSLog(@"insert penModel successfully");
-                    
+    
+    /**
+     *  @author gitKong
+     *
+     *  多个数据库，测试
+     */
+    BOOL success = NO;
+    success = [FLFMDBMANAGERX(@"clarence") fl_insertModel:studentModel];
+    if (success) {
+        success = [FLFMDBMANAGERX(@"clarence") fl_insertModel:penModel];
+        if (success) {
+            FLStudentModel *studentModel = [FLFMDBMANAGERX(@"clarence") fl_searchModel:[FLStudentModel class] byID:@"0"];
+            if (studentModel.penModelID) {
+                FLPenModel *penModel = [FLFMDBMANAGERX(@"clarence") fl_searchModel:[FLPenModel class] byID:studentModel.penModelID];
+                [self showTip:penModel.name];
+                [NSThread sleepForTimeInterval:2.0];
+                FLPenModel *penNewModel = [[FLPenModel alloc] init];
+                penNewModel.name = @"hello world";
+                penNewModel.FLDBID = NSStringFromClass([FLPenModel class]);
+                success = [FLFMDBMANAGERX(@"clarence") fl_modifyModel:penNewModel byID:NSStringFromClass([FLPenModel class])];
+                if (success) {
+                    FLPenModel *model = [FLFMDBMANAGERX(@"clarence") fl_searchModel:[FLPenModel class] byID:penNewModel.FLDBID];
+                    [self showTip:model.name];
                 }
-            }];
-//        }
-//    }];
-    
-//    [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-//        if (flag) {
-            [FLFMDBQUEUEMANAGER fl_insertModel:studentModel complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-                if (flag) {
-                    NSLog(@"insert studentModel successfully");
-                    
-                }
-            }];
-//        }
-//    }];
-    
-    
-    
-//    BOOL success = NO;
-//    success = [FLFMDBMANAGERX(@"clarence") fl_insertModel:studentModel];
-//    if (success) {
-//        success = [FLFMDBMANAGERX(@"clarence") fl_insertModel:penModel];
-//        if (success) {
-//            FLStudentModel *studentModel = [FLFMDBMANAGERX(@"clarence") fl_searchModel:[FLStudentModel class] byID:@"0"];
-//            if (studentModel.penModelID) {
-//                FLPenModel *penModel = [FLFMDBMANAGERX(@"clarence") fl_searchModel:[FLPenModel class] byID:studentModel.penModelID];
-//                [self showTip:penModel.name];
-//            }
-//        }
-//    }
+            }
+        }
+    }
     
     
     

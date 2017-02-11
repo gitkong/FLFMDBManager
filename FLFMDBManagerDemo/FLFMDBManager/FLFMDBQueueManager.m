@@ -613,7 +613,7 @@
                     /**
                      *  @author gitKong
                      *
-                     *  此时运行到这里，数据库的对应表格提示没有，暂时不明白，因此在这仔重新创建一次，确保表格存在
+                     *  此时运行到这里，数据库的对应表格提示没有，暂时不明白，因此在这重新创建一次，确保表格存在
                      */
                     BOOL insertSuccess = YES;
                     insertSuccess = [self fl_create:db table:[model class] autoCloseDB:NO];
@@ -842,26 +842,18 @@
                 key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
             }
             id value = [model valueForKey:key];
+            /**
+             *  @author gitKong
+             *
+             *  防止属性没赋值
+             */
+            if (value == [NSNull null]) {
+                value = @"";
+            }
             if (i == 0) {
-                /**
-                 *  @author gitKong
-                 *
-                 *  防止属性没赋值
-                 */
-                if (value == [NSNull null]) {
-                    value = @"";
-                }
                 [sql appendFormat:@"%@ = %@",key,([value isKindOfClass:[NSString class]] || [value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableDictionary class]] || [value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSMutableArray class]]) ? [NSString stringWithFormat:@"'%@'",(value ? value : @"")] : value ? value : 0];
             }
             else{
-                /**
-                 *  @author gitKong
-                 *
-                 *  防止属性没赋值
-                 */
-                if (value == [NSNull null]) {
-                    value = @"";
-                }
                 [sql appendFormat:@",%@ = %@",key,([value isKindOfClass:[NSString class]] || [value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableDictionary class]] || [value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSMutableArray class]]) ? [NSString stringWithFormat:@"'%@'",(value ? value : @"")] : value ? value : 0];
             }
         }

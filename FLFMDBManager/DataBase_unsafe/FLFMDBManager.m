@@ -511,6 +511,14 @@
                 key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
             }
             id value = [model valueForKey:key];
+            /**
+             *  @author gitKong
+             *
+             *  防止属性没赋值
+             */
+            if (value == [NSNull null]) {
+                value = @"";
+            }
             if (i == 0) {
                 [sql appendFormat:@"%@ = %@",key,([value isKindOfClass:[NSString class]] || [value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableDictionary class]] || [value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSMutableArray class]]) ? [NSString stringWithFormat:@"'%@'",value] : value];
             }
