@@ -21,5 +21,7 @@
 @property (nonatomic,copy)NSString *name;
     
 @property (nonatomic,strong)NSDictionary *dict;
+    
+@property (nonatomic,strong)NSArray *arr;
 
 @end

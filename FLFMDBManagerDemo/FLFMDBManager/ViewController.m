@@ -165,9 +165,9 @@
 //    
 //    [NSThread detachNewThreadSelector:@selector(writeDbTwo) toTarget:self withObject:nil];
     
-    [self writeDbOne];
-    [self writeDbTwo];
-    [self readDb];
+//    [self writeDbOne];
+//    [self writeDbTwo];
+//    [self readDb];
     
     /**
      *  @author gitKong
@@ -203,6 +203,16 @@
                       @"name":@"gitKong",
                       @"age":@23
                       };
+    penModel.arr = @[@{
+                         @"name":@"gitKong",
+                         @"age":@23
+                         },
+                     
+                    @{
+                         @"name":@"gitKong",
+                         @"age":@23
+                         }
+                     ];
     
     FLPenModel *penModel1 = [[FLPenModel alloc] init];
     penModel1.name = @"My Pen";
@@ -292,19 +302,27 @@
     /**
      *  @author gitKong
      *
-     *  同时操作多个数据库，回调只会执行最先调用的方法的，下面的方法回调不执行，正在解决。。。
+     *  操作同一个数据库回调没问题，但同时操作多个数据库，回调只会执行最先调用的方法的，下面的方法回调不执行，正在解决。。。
      */
-//    [FLFMDBQUEUEMANAGERX(@"hello world") fl_createTable:[FLBookModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-//        NSLog(@"FLBookModel = %zd",flag);
-//    }];
-//    
-//    [FLFMDBQUEUEMANAGERX(@"hello world") fl_createTable:[FLPenModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-//        NSLog(@"FLPenModel = %zd",flag);
-//    }];
-//    
-//    [FLFMDBQUEUEMANAGERX(@"hello world") fl_searchModelArr:[FLBookModel class] complete:^(FLFMDBQueueManager *manager, NSArray *modelArr) {
-//        NSLog(@"modelArr = %@",modelArr);
-//    }];
+    [FLFMDBQUEUEMANAGERX(@"hello world") fl_createTable:[FLBookModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+        NSLog(@"FLBookModel = %zd",flag);
+    }];
+    
+    [FLFMDBQUEUEMANAGERX(@"hello world") fl_createTable:[FLPenModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+        
+        [FLFMDBQUEUEMANAGERX(@"hello world") fl_insertModel:penModel complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+            NSLog(@"FLPenModel = %zd",flag);
+            if (flag) {
+                [FLFMDBQUEUEMANAGERX(@"hello world") fl_searchModel:[FLPenModel class] byID:@"1" complete:^(FLFMDBQueueManager *manager, id model) {
+                    NSLog(@"FLPenModel = %@",model);
+                }];
+            }
+        }];
+    }];
+    
+    [FLFMDBQUEUEMANAGERX(@"hello world") fl_searchModelArr:[FLBookModel class] complete:^(FLFMDBQueueManager *manager, NSArray *modelArr) {
+        NSLog(@"modelArr = %@",modelArr);
+    }];
     
     
     
