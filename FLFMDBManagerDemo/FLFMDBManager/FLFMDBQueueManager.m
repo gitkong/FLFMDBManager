@@ -342,7 +342,8 @@
             value = @"";
         }
         if ([value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableDictionary class]] || [value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSMutableArray class]]) {
-            value = [NSString stringWithFormat:@"%@",value];
+//            value = [NSString stringWithFormat:@"%@",value];
+            value = [self fl_ID2String:value];
         }
         if (i == 0) {
             // sql 语句中字符串需要单引号或者双引号括起来
@@ -357,7 +358,28 @@
     
     return sqlValueM;
 }
-
+    
+- (id)fl_string2ID:(NSString *)str{
+    if (str == nil) {
+        return nil;
+    }
+    NSData *jsonData = [str dataUsingEncoding:NSUTF8StringEncoding];
+    NSError *err;
+    id value = [NSJSONSerialization JSONObjectWithData:jsonData
+                                                        options:NSJSONReadingMutableContainers
+                                                          error:&err];
+    if(err){
+        return nil;
+    }
+    return value;
+}
+    
+- (NSString *)fl_ID2String:(id)value{
+    NSError *parseError = nil;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:value options:NSJSONWritingPrettyPrinted error:&parseError];
+    return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+}
+    
 /**
  *  @author gitkong
  *
@@ -788,8 +810,7 @@
                 
                 id value = [rs objectForColumnName:key];
                 if ([value isKindOfClass:[NSString class]]) {
-                    NSData *data = [value dataUsingEncoding:NSUTF8StringEncoding];
-                    id result = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+                    id result = [self fl_string2ID:value];
                     if ([result isKindOfClass:[NSDictionary class]] || [result isKindOfClass:[NSMutableDictionary class]] || [result isKindOfClass:[NSArray class]] || [result isKindOfClass:[NSMutableArray class]]) {
                         [object setValue:result forKey:key];
                     }
@@ -808,7 +829,12 @@
         if (autoCloseDB) {
             [self fl_closeDB:db];
         }
-        return modelArrM.copy;
+        /**
+         *  @author gitKong
+         *
+         *  不能使用copy，会将数组里面的object的字典和数组属性全部转成string
+         */
+        return modelArrM;
     }
     else{
         if (autoCloseDB) {

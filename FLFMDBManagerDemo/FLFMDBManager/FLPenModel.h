@@ -19,5 +19,7 @@
 @property (nonatomic,copy)NSString *FLDBID;
 
 @property (nonatomic,copy)NSString *name;
+    
+@property (nonatomic,strong)NSDictionary *dict;
 
 @end

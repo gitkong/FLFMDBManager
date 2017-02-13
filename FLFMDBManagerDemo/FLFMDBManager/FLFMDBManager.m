@@ -427,7 +427,7 @@
         if (autoCloseDB) {
             [FLCURRENTDB close];
         }
-        return modelArrM.copy;
+        return modelArrM;
     }
     else{
         return nil;
