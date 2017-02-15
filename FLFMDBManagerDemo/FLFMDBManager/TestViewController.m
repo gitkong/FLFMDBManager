@@ -18,10 +18,10 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
-    [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-        self.name = @"hello world";
-        [self testCircleRef];
-    }];
+//    [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//        self.name = @"hello world";
+//        [self testCircleRef];
+//    }];
 }
 
 - (void)testCircleRef{

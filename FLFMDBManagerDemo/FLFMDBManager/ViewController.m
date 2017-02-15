@@ -24,7 +24,7 @@
 
 - (void)writeDbOne{
     NSMutableArray *arrM = [NSMutableArray array];
-    for (NSInteger index = 0; index < 300; index ++) {
+    for (NSInteger index = 0; index < 500; index ++) {
         
         FLStudentModel *model = [[FLStudentModel alloc] init];
 //        model.name_gitKong = @"clarence";
@@ -69,7 +69,7 @@
 
 - (void)writeDbTwo{
     NSMutableArray *arrM = [NSMutableArray array];
-    for (NSInteger index = 300; index < 500; index ++) {
+    for (NSInteger index = 500; index < 1000; index ++) {
         
         FLStudentModel *model = [[FLStudentModel alloc] init];
         model.name_gitKong = @"clarence";
@@ -160,41 +160,11 @@
      *  多线程测试
      */
 //    [NSThread detachNewThreadSelector:@selector(writeDbOne) toTarget:self withObject:nil];
-//    
+//
 //    [NSThread detachNewThreadSelector:@selector(readDb) toTarget:self withObject:nil];
 //    
 //    [NSThread detachNewThreadSelector:@selector(writeDbTwo) toTarget:self withObject:nil];
     
-//    [self writeDbOne];
-//    [self writeDbTwo];
-//    [self readDb];
-    
-    /**
-     *  @author gitKong
-     *
-     *  解决死锁问题
-     */
-    /*
-    [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-        if (flag) {
-            NSLog(@"创建成功");
-            
-            [FLFMDBQUEUEMANAGER fl_isExitTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-                NSLog(@"flag = %zd",flag);
-            }];
-//            [FLFMDBQUEUEMANAGER fl_deleteAllModel:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-//                NSLog(@"flag = %zd",flag);
-//            }];
-            
-//            [FLFMDBQUEUEMANAGER fl_searchModelArr:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, NSArray *modelArr) {
-//                NSLog(@"modelArr = %@",modelArr);
-//                if (modelArr == nil) {
-//                    [self writeDbTwo];
-//                }
-//            }];
-        }
-    }];
-     */
     
     FLPenModel *penModel = [[FLPenModel alloc] init];
     penModel.name = @"My Pen";
@@ -208,7 +178,7 @@
                          @"age":@23
                          },
                      
-                    @{
+                     @{
                          @"name":@"gitKong",
                          @"age":@23
                          }
@@ -218,21 +188,79 @@
     penModel1.name = @"My Pen";
     penModel1.FLDBID = @"2";
     penModel1.dict = @{
-                      @"name":@"gitKong",
-                      @"age":@23
-                      };
+                       @"name":@"gitKong",
+                       @"age":@23
+                       };
     
     FLBookModel *bookModel = [[FLBookModel alloc] init];
     bookModel.name = @"My Book";
     bookModel.FLDBID = NSStringFromClass([FLBookModel class]);
     
     FLStudentModel *studentModel = [[FLStudentModel alloc] init];
-    studentModel.name_gitKong = @"gitkong";
+    studentModel.name_gitKong = @"惺惺xxxxx惺惺想";
     studentModel.age = 24;
-    studentModel.FLDBID = @"0";
+    studentModel.FLDBID = @"xxx";
     // 记录嵌套模型的id
-    studentModel.penModelID = penModel.FLDBID;
-    studentModel.bookModelID = bookModel.FLDBID;
+//    studentModel.penModelID = penModel.FLDBID;
+//    studentModel.bookModelID = bookModel.FLDBID;
+    
+    
+    /**
+     *  @author gitKong
+     *
+     *  解决死锁问题，通过insert创建就可以查到对应表
+     */
+//    [FLFMDBQUEUEMANAGER fl_insertModel:studentModel complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//        if (flag) {
+//            NSLog(@"success------");
+//            [FLFMDBQUEUEMANAGER fl_isExitTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//                NSLog(@"flag = %zd",flag);
+//            }];
+//        }
+//    }];
+    
+    
+    /**
+     *  @author gitKong
+     *
+     *  创建表格，回调是成功创建，但一直找不到表格，通过insert创建就没问题，已解决！
+     */
+//    [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//        if (flag) {
+//            NSLog(@"创建成功");
+//            
+//            [FLFMDBQUEUEMANAGER fl_isExitTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//                NSLog(@"flag = %zd",flag);
+//            }];
+//        }
+//    }];
+     /**/
+    
+    
+    /**
+     *  @author gitKong
+     *
+     *  db处理，多数据库操作正常
+     */
+    
+    BOOL flag = [FLFMDBMANAGER fl_createTable:[FLStudentModel class]];
+    if (flag) {
+        NSLog(@"创建成功");
+        flag = [FLFMDBMANAGER fl_isExitTable:[FLStudentModel class]];
+        if (flag) {
+            NSLog(@"[FLStudentModel class] is exit");
+        }
+    }
+    
+    flag = [FLFMDBMANAGERX(@"hello world") fl_createTable:[FLStudentModel class]];
+    if (flag) {
+        NSLog(@"hello world 创建成功");
+    }
+    
+    flag = [FLFMDBMANAGERX(@"clarence") fl_createTable:[FLStudentModel class]];
+    if (flag) {
+        NSLog(@"clarence 创建成功");
+    }
 
     /**
      *  @author gitKong
@@ -304,27 +332,32 @@
      *
      *  操作同一个数据库回调没问题，但同时操作多个数据库，回调只会执行最先调用的方法的，下面的方法回调不执行，正在解决。。。
      */
-    [FLFMDBQUEUEMANAGERX(@"hello world") fl_createTable:[FLBookModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-        NSLog(@"FLBookModel = %zd",flag);
-    }];
+//    [FLFMDBQUEUEMANAGERX(@"hello world") fl_createTable:[FLBookModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//        NSLog(@"FLBookModel = %zd",flag);
+//    }];
+//    
+//    [FLFMDBQUEUEMANAGERX(@"hello") fl_createTable:[FLPenModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//        
+//        [FLFMDBQUEUEMANAGERX(@"hello world") fl_insertModel:penModel complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//            NSLog(@"FLPenModel = %zd",flag);
+//            if (flag) {
+//                [FLFMDBQUEUEMANAGERX(@"hello world") fl_searchModel:[FLPenModel class] byID:@"1" complete:^(FLFMDBQueueManager *manager, id model) {
+//                    NSLog(@"FLPenModel = %@",model);
+//                }];
+//            }
+//        }];
+//    }];
+//    
+//    [FLFMDBQUEUEMANAGERX(@"hello world") fl_searchModelArr:[FLBookModel class] complete:^(FLFMDBQueueManager *manager, NSArray *modelArr) {
+//        NSLog(@"modelArr = %@",modelArr);
+//    }];
     
-    [FLFMDBQUEUEMANAGERX(@"hello world") fl_createTable:[FLPenModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-        
-        [FLFMDBQUEUEMANAGERX(@"hello world") fl_insertModel:penModel complete:^(FLFMDBQueueManager *manager, BOOL flag) {
-            NSLog(@"FLPenModel = %zd",flag);
-            if (flag) {
-                [FLFMDBQUEUEMANAGERX(@"hello world") fl_searchModel:[FLPenModel class] byID:@"1" complete:^(FLFMDBQueueManager *manager, id model) {
-                    NSLog(@"FLPenModel = %@",model);
-                }];
-            }
-        }];
-    }];
-    
-    [FLFMDBQUEUEMANAGERX(@"hello world") fl_searchModelArr:[FLBookModel class] complete:^(FLFMDBQueueManager *manager, NSArray *modelArr) {
-        NSLog(@"modelArr = %@",modelArr);
-    }];
-    
-    
+//    [FLFMDBQUEUEMANAGER fl_createTable:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//        NSLog(@"%ld",(long)flag);
+//        if (flag) {
+//            
+//        }
+//    }];
     
     
     [self.tableView registerNib:[UINib nibWithNibName:@"FLStudentTableViewCell" bundle:nil] forCellReuseIdentifier:@"cell"];
@@ -362,9 +395,9 @@
         dispatch_async(dispatch_get_main_queue(), ^{
             [strongSelf.modelArrM removeAllObjects];
             FLStudentModel *model = modelArr.firstObject;
-            for (NSString *str in model.scroceArrM) {
-                NSLog(@"----xxxxxxxxxxxxxxxxxxxxxxxx---%@",str);
-            }
+//            for (NSString *str in model.scroceArrM) {
+//                NSLog(@"----xxxxxxxxxxxxxxxxxxxxxxxx---%@",str);
+//            }
             [strongSelf.modelArrM addObjectsFromArray:modelArr];
             [strongSelf.tableView reloadData];
         });
@@ -399,8 +432,21 @@
         else{
             str = @"删表失败";
         }
-        [weakSelf showTip:str];
+        [strongSelf showTip:str];
     }];
+    
+//    [FLFMDBQUEUEMANAGER fl_deleteAllModel:[FLStudentModel class] complete:^(FLFMDBQueueManager *manager, BOOL flag) {
+//        NSString *str = @"";
+//        if (flag) {
+//            str = @"删成功";
+//            
+//        }
+//        else{
+//            str = @"删失败";
+//        }
+//        [weakSelf showTip:str];
+//    }];
+    
 }
 
 - (void)showTip:(NSString *)tip{

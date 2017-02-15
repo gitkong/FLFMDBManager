@@ -10,11 +10,6 @@
 #import "FMDB.h"
 #import <objc/runtime.h>
 #import <UIKit/UIKit.h>
-//#define FL_ISEXITTABLE(modelClass) \
-//{NSString *classNameTip = [NSString stringWithFormat:@"%@ 表不存在，请先创建",modelClass]; \
-//NSAssert([self isExitTable:modelClass autoCloseDB:NO], classNameTip);\
-//}
-
 
 #define FLCURRENTDB (FMDatabase *)self.dataBaseDictM[self.dbName]
 
@@ -540,15 +535,6 @@
         }
         return NO;
     }
-    
 }
-
-#pragma mark -- Setter & Getter
-//- (NSMutableDictionary *)dataBaseDictM{
-//    if (_dataBaseDictM == nil) {
-//        _dataBaseDictM = [NSMutableDictionary dictionary];
-//    }
-//    return _dataBaseDictM;
-//}
 
 @end
