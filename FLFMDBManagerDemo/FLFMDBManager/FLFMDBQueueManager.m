@@ -109,7 +109,7 @@
     FLDISPATCH_ASYNC_GLOBAL(^{
         //把任务包装到事务里
         [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-            __weak typeof(self) strongSelf = weakSelf;
+            typeof(self) strongSelf = weakSelf;
             modelArr = [strongSelf fl_search:db modelArr:modelClass autoCloseDB:autoCloseDB];
             // 回调
             if (complete) {
@@ -136,7 +136,7 @@
     FLDISPATCH_ASYNC_GLOBAL(^{
         //把任务包装到事务里
         [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-            __weak typeof(self) strongSelf = weakSelf;
+            typeof(self) strongSelf = weakSelf;
             
             success = [strongSelf fl_modify:db model:model byID:FLDBID autoCloseDB:autoCloseDB];
             // 回调
@@ -165,7 +165,7 @@
     FLDISPATCH_ASYNC_GLOBAL(^{
         //把任务包装到事务里
         [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-            __weak typeof(self) strongSelf = weakSelf;
+            typeof(self) strongSelf = weakSelf;
             
             success = [strongSelf fl_drop:db table:modelClass autoCloseDB:autoCloseDB];
             // 回调
@@ -190,7 +190,7 @@
 //    __block BOOL success = true;
 //    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback) {
 //        
-//        __weak typeof(self) strongSelf = weakSelf;
+//        typeof(self) strongSelf = weakSelf;
 //        FMResultSet *rs = [db executeQuery:sqlStr];
 //        while ([rs next]) {
 //            NSString *table_name = [rs stringForColumn:@"table_name"];
@@ -224,7 +224,7 @@
     FLDISPATCH_ASYNC_GLOBAL(^{
         //把任务包装到事务里
         [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-            __weak typeof(self) strongSelf = weakSelf;
+            typeof(self) strongSelf = weakSelf;
             
             success = [strongSelf fl_delete:db allModel:modelClass autoCloseDB:autoCloseDB];
             // 回调
@@ -253,7 +253,7 @@
     FLDISPATCH_ASYNC_GLOBAL(^{
         //把任务包装到事务里
         [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-            __weak typeof(self) strongSelf = weakSelf;
+            typeof(self) strongSelf = weakSelf;
             
             success = [strongSelf fl_delete:db model:modelClass byId:FLDBID autoCloseDB:autoCloseDB];
             // 回调
@@ -392,7 +392,7 @@
     //把任务包装到事务里
     FLDISPATCH_ASYNC_GLOBAL(^{
         [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-            __weak typeof(self) strongSelf = weakSelf;
+            typeof(self) strongSelf = weakSelf;
             
             success = [strongSelf fl_isExit:db table:modelClass autoCloseDB:autoCloseDB];
 
@@ -485,7 +485,7 @@
     FLDISPATCH_ASYNC_GLOBAL(^{
         //把任务包装到事务里
         [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-            __weak typeof(self) strongSelf = weakSelf;
+            typeof(self) strongSelf = weakSelf;
             success = [strongSelf fl_create:db table:modelClass autoCloseDB:autoCloseDB];
             
             // 回调
@@ -545,7 +545,7 @@
         FLDISPATCH_ASYNC_GLOBAL(^{
             //把任务包装到事务里
             [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-                __weak typeof(self) strongSelf = weakSelf;
+                typeof(self) strongSelf = weakSelf;
                 success = [strongSelf fl_insert:db model:model autoCloseDB:autoCloseDB];
                 if (complete) {
                     FLDISPATCH_ASYNC_MAIN(^{
@@ -563,7 +563,7 @@
     else{
         //把任务包装到事务里
         [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-            __weak typeof(self) strongSelf = weakSelf;
+            typeof(self) strongSelf = weakSelf;
             
             success = [strongSelf fl_insert:db model:model autoCloseDB:autoCloseDB];
             if (complete) {
@@ -588,7 +588,7 @@
     //    __weak typeof(self) weakSelf = self;
     //    //把任务包装到事务里
     //    [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-    //        __weak typeof(self) strongSelf = weakSelf;
+    //        typeof(self) strongSelf = weakSelf;
     //        NSLog(@"fl_insertModel----------------------db--%p",db);
     //        success = [strongSelf fl_insert:db modelArr:modelArr autoCloseDB:YES];
     //            //strongSelf.db = db;
@@ -753,7 +753,7 @@
     //把任务包装到事务里
     FLDISPATCH_ASYNC_GLOBAL(^{
         [FLCURRENTDBQUEUE inTransaction:^(FMDatabase *db, BOOL *rollback){
-            __weak typeof(self) strongSelf = weakSelf;
+            typeof(self) strongSelf = weakSelf;
             // 回调
             if (complete) {
                 FLDISPATCH_ASYNC_MAIN(^{
