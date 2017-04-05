@@ -207,7 +207,7 @@
 				TargetAttributes = {
 					11FF1BE21DDD9FC200EBCAB8 = {
 						CreatedOnToolsVersion = 8.0;
-						DevelopmentTeam = GB8FE8WWF8;
+						DevelopmentTeam = 9V8CFFRYD9;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -425,7 +425,7 @@
 			baseConfigurationReference = FF51FBFCD3410C1EF9F9557F /* Pods-FLFMDBManager.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = GB8FE8WWF8;
+				DEVELOPMENT_TEAM = 9V8CFFRYD9;
 				INFOPLIST_FILE = FLFMDBManager/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -439,7 +439,7 @@
 			baseConfigurationReference = C08E1B030E02B119378D206C /* Pods-FLFMDBManager.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = GB8FE8WWF8;
+				DEVELOPMENT_TEAM = 9V8CFFRYD9;
 				INFOPLIST_FILE = FLFMDBManager/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

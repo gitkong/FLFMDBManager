@@ -159,11 +159,11 @@
      *
      *  多线程测试
      */
-//    [NSThread detachNewThreadSelector:@selector(writeDbOne) toTarget:self withObject:nil];
-//
-//    [NSThread detachNewThreadSelector:@selector(readDb) toTarget:self withObject:nil];
-//    
-//    [NSThread detachNewThreadSelector:@selector(writeDbTwo) toTarget:self withObject:nil];
+    [NSThread detachNewThreadSelector:@selector(writeDbOne) toTarget:self withObject:nil];
+
+    [NSThread detachNewThreadSelector:@selector(readDb) toTarget:self withObject:nil];
+    
+    [NSThread detachNewThreadSelector:@selector(writeDbTwo) toTarget:self withObject:nil];
     
     
     FLPenModel *penModel = [[FLPenModel alloc] init];
@@ -570,8 +570,12 @@
             [FLFMDBQUEUEMANAGER fl_modifyModel:model byID:model.FLDBID complete:^(FLFMDBQueueManager *manager, BOOL flag) {
                 __weak typeof(self) strongSelf = weakSelf;
                 if (flag) {
-                    [strongSelf showTip:@"修改名字成功"];
-                    [strongSelf.tableView reloadData];
+                    [FLFMDBQUEUEMANAGER fl_searchModel:[model class] byID:model.FLDBID complete:^(FLFMDBQueueManager *manager, id model) {
+                        FLStudentModel *modifiedModel = (FLStudentModel *)model;
+                        [strongSelf showTip:[NSString stringWithFormat:@"修改名字成功 - %@",modifiedModel.name_gitKong]];
+                        [strongSelf.tableView reloadData];
+                    }];
+                    
                 }
                 else{
                     [strongSelf showTip:@"修改名字失败"];

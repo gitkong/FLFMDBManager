@@ -297,7 +297,12 @@
         [sqlPropertyM appendFormat:@", %@",key];
     }
     [sqlPropertyM appendString:@")"];
-    
+    /*
+     *  BY gitKong
+     *
+     *  注意释放
+     */
+    free(ivars);
     return sqlPropertyM;
 }
 
@@ -313,6 +318,7 @@
     for (int i = 0; i < outCount; i ++) {
         Ivar ivar = ivars[i];
         NSString * key = [NSString stringWithUTF8String:ivar_getName(ivar)] ;
+        //free(ivar);
         if([[key substringToIndex:1] isEqualToString:@"_"]){
             key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
         }
@@ -329,6 +335,7 @@
     for (int i = 0; i < outCount; i ++) {
         Ivar ivar = ivars[i];
         NSString * key = [NSString stringWithUTF8String:ivar_getName(ivar)] ;
+        //free(ivar);
         if([[key substringToIndex:1] isEqualToString:@"_"]){
             key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
         }
@@ -356,7 +363,7 @@
     }
     //    [sqlValueM appendFormat:@" WHERE FLDBID = '%@'",[model valueForKey:@"FLDBID"]];
     [sqlValueM appendString:@");"];
-    
+    free(ivars);
     return sqlValueM;
 }
     
@@ -796,6 +803,7 @@
             for (int i = 0; i < outCount; i ++) {
                 Ivar ivar = ivars[i];
                 NSString * key = [NSString stringWithUTF8String:ivar_getName(ivar)] ;
+                //free(ivar);
                 if([[key substringToIndex:1] isEqualToString:@"_"]){
                     key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
                 }
@@ -816,6 +824,7 @@
                     [object setValue:value forKey:key];
                 }
             }
+            free(ivars);
         }
         if (autoCloseDB) {
             [self fl_closeDB:db];
@@ -860,6 +869,7 @@
             for (int i = 0; i < outCount; i ++) {
                 Ivar ivar = ivars[i];
                 NSString * key = [NSString stringWithUTF8String:ivar_getName(ivar)] ;
+                
                 if([[key substringToIndex:1] isEqualToString:@"_"]){
                     key = [key stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@""];
                 }
@@ -878,7 +888,7 @@
                     [object setValue:value forKey:key];
                 }
             }
-            
+            free(ivars);
             // 添加
             [modelArrM addObject:object];
         }
@@ -915,7 +925,7 @@
         // 修改数据@"UPDATE t_student SET name = 'liwx' WHERE age > 12 AND age < 15;"
         NSMutableString *sql = [NSMutableString stringWithFormat:@"UPDATE %@ SET ",[model class]];
         unsigned int outCount;
-        class_copyIvarList([model superclass],&outCount);
+//        class_copyIvarList([model superclass],&outCount);
         Ivar * ivars = class_copyIvarList([model class], &outCount);
         for (int i = 0; i < outCount; i ++) {
             Ivar ivar = ivars[i];
@@ -939,7 +949,7 @@
                 [sql appendFormat:@",%@ = %@",key,([value isKindOfClass:[NSString class]] || [value isKindOfClass:[NSDictionary class]] || [value isKindOfClass:[NSMutableDictionary class]] || [value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSMutableArray class]]) ? [NSString stringWithFormat:@"'%@'",(value ? value : @"")] : value ? value : 0];
             }
         }
-        
+        free(ivars);
         [sql appendFormat:@" WHERE FLDBID = '%@';",FLDBID];
         if ([db open]) {
             success = [db executeUpdate:sql];
